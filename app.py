@@ -11,6 +11,7 @@
 
 import mta_realtime
 from flask import Flask, request, jsonify, render_template
+from flask_cors import cross_origin
 from flask.json import JSONEncoder
 from datetime import datetime
 
@@ -34,6 +35,7 @@ app.json_encoder = CustomJSONEncoder
 mta = mta_realtime.MtaSanitizer(app.config['MTA_KEY'], app.config['STOPS_FILE'])
 
 @app.route('/')
+@cross_origin(headers=['Content-Type'])
 def index():
     return jsonify({
         'title': 'mta-api-sanity',
@@ -41,6 +43,7 @@ def index():
         })
 
 @app.route('/by-location', methods=['GET'])
+@cross_origin(headers=['Content-Type'])
 def by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
