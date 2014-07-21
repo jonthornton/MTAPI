@@ -81,15 +81,19 @@ class MtaSanitizer(object):
                 data = r.read()
                 mta_data.ParseFromString(data)
 
-                self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
-                self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
+            self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
+            self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
             self._processFeed(mta_data)
 
         # sort by time
         for station in self._stations:
-            station['S'].sort(key=itemgetter(0))
-            station['N'].sort(key=itemgetter(0))
+            if station['S'] or station['N']:
+                station['hasData'] = True
+                station['S'] = sorted(station['S'], key=itemgetter('time'))[:self._MAX_TRAINS]
+                station['N'] = sorted(station['N'], key=itemgetter('time'))[:self._MAX_TRAINS]
+            else:
+                station['hasData'] = False
 
     def lastUpdate(self):
         return self._last_update
@@ -117,15 +121,19 @@ class MtaSanitizer(object):
         for entity in rawData.entity:
             if entity.trip_update:
                 for update in entity.trip_update.stop_time_update:
-                    stop_id = str(update.stop_id[:3])
-                    station = self._stops[stop_id]
-                    direction = update.stop_id[3]
-
                     time = update.arrival.time
                     if time == 0:
                         time = update.departure.time
 
                     time = datetime.datetime.fromtimestamp(time, self._tz)
-                    train = (time, entity.trip_update.trip.route_id)
-                    if time < self._MAX_TIME and len(station[direction]) < self._MAX_TRAINS:
-                        station[direction].append(train)
+                    if time < self._last_update or time > self._MAX_TIME:
+                        continue
+
+                    stop_id = str(update.stop_id[:3])
+                    station = self._stops[stop_id]
+                    direction = update.stop_id[3]
+
+                    station[direction].append({
+                        'route': entity.trip_update.trip.route_id,
+                        'time': time
+                    })
