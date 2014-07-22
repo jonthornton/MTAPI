@@ -20,6 +20,7 @@ class MtaSanitizer(object):
         self._CACHE_SECONDS = cache_seconds
         self._stations = []
         self._stops = {}
+        self._routes = {}
 
         # initialize the stations database
         with open(stops_file, 'rb') as f:
@@ -36,15 +37,19 @@ class MtaSanitizer(object):
 
                 self._groupStop(stop)
 
+        for station in self._stations:
+            # TODO: improve name grouping
+            station['name'] = ' / '.join(station['name'])
+
         self._fetchData()
-        # pprint(self._stations)
-        # exit()
+
     def _groupStop(self, stop):
-        GROUPING_THRESHOLD = 0.004
+        GROUPING_THRESHOLD = 0.003
 
         # this is O(n^2) - can definitely be improved
         for station in self._stations:
             if distance(stop['location'], station['location']) < GROUPING_THRESHOLD:
+                station['name'].add(stop['name'])
                 station['stops'][stop['id']] = stop['location']
                 new_lat = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
                 new_lon = sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
@@ -53,7 +58,7 @@ class MtaSanitizer(object):
                 return
 
         station = {
-            'name': stop['name'],
+            'name': set([stop['name']]),
             'location': stop['location'],
             'stops': { stop['id']: stop['location'] },
             'N': [],
@@ -98,13 +103,6 @@ class MtaSanitizer(object):
     def lastUpdate(self):
         return self._last_update
 
-    def getAll(self):
-
-        if time.time() - self._last_update > 60:
-            self._fetchData()
-
-        return self._stations
-
     def getByPoint(self, point, limit=5):
         if self.is_expired():
             self._fetchData()
@@ -112,6 +110,17 @@ class MtaSanitizer(object):
         sortable_stations = copy.copy(self._stations)
         sortable_stations.sort(key=lambda x: distance(x['location'], point))
         return sortable_stations[:limit]
+
+    def getRoutes(self):
+        return self._routes.keys()
+
+    def getByRoute(self, route):
+        if self.is_expired():
+            self._fetchData()
+
+        # return self._routes[route]
+
+        return {k: self._stops[k] for k in self._routes[route]}
 
     def is_expired(self):
         age = datetime.datetime.now(self._tz) - self._last_update
@@ -129,11 +138,18 @@ class MtaSanitizer(object):
                     if time < self._last_update or time > self._MAX_TIME:
                         continue
 
+                    route_id = entity.trip_update.trip.route_id
                     stop_id = str(update.stop_id[:3])
                     station = self._stops[stop_id]
                     direction = update.stop_id[3]
 
                     station[direction].append({
-                        'route': entity.trip_update.trip.route_id,
+                        'route': route_id,
                         'time': time
                     })
+
+                    try:
+                        self._routes[route_id].add(stop_id)
+                    except KeyError, e:
+                        self._routes[route_id] = set([stop_id])
+

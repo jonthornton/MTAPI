@@ -60,5 +60,22 @@ def by_location():
         'data': mta.getByPoint(location, 5)
         })
 
+@app.route('/by-route/<route>', methods=['GET'])
+@cross_origin(headers=['Content-Type'])
+def by_route(route):
+
+    return jsonify({
+        'updated': mta.lastUpdate(),
+        'data': mta.getByRoute(route)
+        })
+
+@app.route('/routes', methods=['GET'])
+@cross_origin(headers=['Content-Type'])
+def routes():
+    return jsonify({
+        'updated': mta.lastUpdate(),
+        'data': mta.getRoutes()
+        })
+
 if __name__ == '__main__':
     app.run()
