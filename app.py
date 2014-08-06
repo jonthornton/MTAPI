@@ -14,7 +14,6 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import cross_origin
 from flask.json import JSONEncoder
 from datetime import datetime
-import threading
 import time
 
 app = Flask(__name__)
@@ -45,17 +44,18 @@ mta = mta_realtime.MtaSanitizer(
     app.config['STOPS_FILE'],
     max_trains=app.config['MAX_TRAINS'],
     max_minutes=app.config['MAX_MINUTES'],
-    expires_seconds=app.config['CACHE_SECONDS'])
+    expires_seconds=app.config['CACHE_SECONDS'],
+    threaded=app.config['THREADED'])
 
-def thread_loop(seconds):
-    global mta, app
-    time.sleep(seconds)
-    mta.update()
-    print mta.last_update()
-    threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], )).start()
+# def thread_loop(seconds):
+#     global mta, app
+#     time.sleep(seconds)
+#     mta.update()
+#     print mta.last_update()
+#     threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], )).start()
 
-if app.config['THREADED']:
-    threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], )).start()
+# if app.config['THREADED']:
+#     threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], ), daemon=True).start()
 
 @app.route('/')
 @cross_origin(headers=['Content-Type'])
@@ -78,9 +78,6 @@ def by_location():
         response.status_code = 400
         return response
 
-    if not app.config['THREADED'] and mta.is_expired():
-        mta.update()
-
     return jsonify({
         'updated': mta.last_update(),
         'data': mta.get_by_point(location, 5)
@@ -89,9 +86,6 @@ def by_location():
 @app.route('/by-route/<route>', methods=['GET'])
 @cross_origin(headers=['Content-Type'])
 def by_route(route):
-    if not app.config['THREADED'] and mta.is_expired():
-        mta.update()
-
     return jsonify({
         'updated': mta.last_update(),
         'data': mta.get_by_route(route)
