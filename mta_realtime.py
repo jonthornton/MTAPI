@@ -13,11 +13,11 @@ class MtaSanitizer(object):
     _last_update = 0
     _tz = timezone('US/Eastern')
 
-    def __init__(self, key, stops_file, max_trains=10, max_minutes=30, cache_seconds=60):
+    def __init__(self, key, stops_file, max_trains=10, max_minutes=30, expires_seconds=60):
         self._KEY = key
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
-        self._CACHE_SECONDS = cache_seconds
+        self._EXPIRES_SECONDS = expires_seconds
         self._stations = []
         self._stops = {}
         self._routes = {}
@@ -35,15 +35,15 @@ class MtaSanitizer(object):
                     'location': (float(row['stop_lat']), float(row['stop_lon']))
                 }
 
-                self._groupStop(stop)
+                self._group_stop(stop)
 
         for station in self._stations:
             # TODO: improve name grouping
             station['name'] = ' / '.join(station['name'])
 
-        self._fetchData()
+        self.update()
 
-    def _groupStop(self, stop):
+    def _group_stop(self, stop):
         GROUPING_THRESHOLD = 0.003
 
         # this is O(n^2) - can definitely be improved
@@ -68,12 +68,13 @@ class MtaSanitizer(object):
         self._stops[stop['id']] = station
 
 
-    def _fetchData(self):
+    def update(self):
 
         # clear old times
         for station in self._stations:
             station['N'] = []
             station['S'] = []
+            station['routes'] = set()
 
         feed_urls = [
             'http://datamine.mta.info/mta_esi.php?feed_id=1&key='+self._KEY,
@@ -89,7 +90,7 @@ class MtaSanitizer(object):
             self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
             self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
-            self._processFeed(mta_data)
+            self._process_feed(mta_data)
 
         # sort by time
         for station in self._stations:
@@ -100,33 +101,28 @@ class MtaSanitizer(object):
             else:
                 station['hasData'] = False
 
-    def lastUpdate(self):
+    def last_update(self):
         return self._last_update
 
-    def getByPoint(self, point, limit=5):
-        if self.is_expired():
-            self._fetchData()
-
+    def get_by_point(self, point, limit=5):
         sortable_stations = copy.copy(self._stations)
         sortable_stations.sort(key=lambda x: distance(x['location'], point))
         return sortable_stations[:limit]
 
-    def getRoutes(self):
+    def get_routes(self):
         return self._routes.keys()
 
-    def getByRoute(self, route):
-        if self.is_expired():
-            self._fetchData()
-
-        # return self._routes[route]
-
+    def get_by_route(self, route):
         return {k: self._stops[k] for k in self._routes[route]}
 
     def is_expired(self):
-        age = datetime.datetime.now(self._tz) - self._last_update
-        return age.total_seconds() > self._CACHE_SECONDS
+        if self._EXPIRES_SECONDS:
+            age = datetime.datetime.now(self._tz) - self._last_update
+            return age.total_seconds() > self._EXPIRES_SECONDS
+        else:
+            return false
 
-    def _processFeed(self, rawData):
+    def _process_feed(self, rawData):
         for entity in rawData.entity:
             if entity.trip_update:
                 for update in entity.trip_update.stop_time_update:
@@ -147,6 +143,8 @@ class MtaSanitizer(object):
                         'route': route_id,
                         'time': time
                     })
+
+                    station['routes'].add(route_id)
 
                     try:
                         self._routes[route_id].add(stop_id)

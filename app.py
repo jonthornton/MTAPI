@@ -14,8 +14,16 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import cross_origin
 from flask.json import JSONEncoder
 from datetime import datetime
+import threading
+import time
 
 app = Flask(__name__)
+app.config.update(
+    MAX_TRAINS=10,
+    MAX_MINUTES=30,
+    CACHE_SECONDS=10,
+    THREADED=True
+)
 app.config.from_envvar('MTA_SETTINGS')
 
 class CustomJSONEncoder(JSONEncoder):
@@ -32,7 +40,22 @@ class CustomJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 app.json_encoder = CustomJSONEncoder
 
-mta = mta_realtime.MtaSanitizer(app.config['MTA_KEY'], app.config['STOPS_FILE'])
+mta = mta_realtime.MtaSanitizer(
+    app.config['MTA_KEY'],
+    app.config['STOPS_FILE'],
+    max_trains=app.config['MAX_TRAINS'],
+    max_minutes=app.config['MAX_MINUTES'],
+    expires_seconds=app.config['CACHE_SECONDS'])
+
+def thread_loop(seconds):
+    global mta, app
+    time.sleep(seconds)
+    mta.update()
+    print mta.last_update()
+    threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], )).start()
+
+if app.config['THREADED']:
+    threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], )).start()
 
 @app.route('/')
 @cross_origin(headers=['Content-Type'])
@@ -55,26 +78,31 @@ def by_location():
         response.status_code = 400
         return response
 
+    if not app.config['THREADED'] and mta.is_expired():
+        mta.update()
+
     return jsonify({
-        'updated': mta.lastUpdate(),
-        'data': mta.getByPoint(location, 5)
+        'updated': mta.last_update(),
+        'data': mta.get_by_point(location, 5)
         })
 
 @app.route('/by-route/<route>', methods=['GET'])
 @cross_origin(headers=['Content-Type'])
 def by_route(route):
+    if not app.config['THREADED'] and mta.is_expired():
+        mta.update()
 
     return jsonify({
-        'updated': mta.lastUpdate(),
-        'data': mta.getByRoute(route)
+        'updated': mta.last_update(),
+        'data': mta.get_by_route(route)
         })
 
 @app.route('/routes', methods=['GET'])
 @cross_origin(headers=['Content-Type'])
 def routes():
     return jsonify({
-        'updated': mta.lastUpdate(),
-        'data': mta.getRoutes()
+        'updated': mta.last_update(),
+        'data': mta.get_routes()
         })
 
 if __name__ == '__main__':
