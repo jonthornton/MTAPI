@@ -1,10 +1,11 @@
 import gtfs_realtime_pb2, nyct_subway_pb2
-import urllib2, contextlib, time, datetime, copy
+import urllib2, contextlib, datetime, copy
 from operator import itemgetter
 from pprint import pprint
 from pytz import timezone
-import threading, atexit
+import threading, time
 import csv, math
+import logging
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -23,6 +24,9 @@ class MtaSanitizer(object):
         self._stations = []
         self._stops = {}
         self._routes = {}
+        self._read_lock = threading.Lock()
+        self._update_lock = threading.Lock()
+        self.logger = logging.getLogger(__name__)
 
         # initialize the stations database
         with open(stops_file, 'rb') as f:
@@ -43,10 +47,9 @@ class MtaSanitizer(object):
             # TODO: improve name grouping
             station['name'] = ' / '.join(station['name'])
 
-        self.update()
+        self._update()
 
         if self._THREADED:
-            self._update_lock = threading.Lock()
             self._thread = threading.Thread(target=self._threaded_update)
             self._thread.daemon = True
             self._thread.start()
@@ -54,10 +57,16 @@ class MtaSanitizer(object):
     def _threaded_update(self):
         while True:
             time.sleep(self._EXPIRES_SECONDS)
-            print '_threaded_update'
-            self._update_lock.acquire()
-            self.update()
-            self._update_lock.release()
+            self._update()
+
+    @staticmethod
+    def _build_stops_index(stations):
+        stops = {}
+        for station in stations:
+            for stop_id in station['stops'].keys():
+                stops[stop_id] = station
+
+        return stops
 
     def _group_stop(self, stop):
         GROUPING_THRESHOLD = 0.003
@@ -70,7 +79,6 @@ class MtaSanitizer(object):
                 new_lat = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
                 new_lon = sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
                 station['location'] = (new_lat, new_lon)
-                self._stops[stop['id']] = station
                 return
 
         station = {
@@ -81,16 +89,25 @@ class MtaSanitizer(object):
             'S': []
         }
         self._stations.append(station)
-        self._stops[stop['id']] = station
 
 
-    def update(self):
-        print 'updating...'
+    def _update(self):
+        if not self._update_lock.acquire(False):
+            return
+
+        self.logger.info('updating...')
+
+        # create working copy for thread safety
+        stations = copy.deepcopy(self._stations)
+
         # clear old times
-        for station in self._stations:
+        for station in stations:
             station['N'] = []
             station['S'] = []
             station['routes'] = set()
+
+        stops = MtaSanitizer._build_stops_index(stations)
+        routes = {}
 
         feed_urls = [
             'http://datamine.mta.info/mta_esi.php?feed_id=1&key='+self._KEY,
@@ -106,16 +123,48 @@ class MtaSanitizer(object):
             self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
             self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
-            self._process_feed(mta_data)
+            for entity in mta_data.entity:
+                if entity.trip_update:
+                    for update in entity.trip_update.stop_time_update:
+                        time = update.arrival.time
+                        if time == 0:
+                            time = update.departure.time
+
+                        time = datetime.datetime.fromtimestamp(time, self._tz)
+                        if time < self._last_update or time > self._MAX_TIME:
+                            continue
+
+                        route_id = entity.trip_update.trip.route_id
+                        stop_id = str(update.stop_id[:3])
+                        station = stops[stop_id]
+                        direction = update.stop_id[3]
+
+                        station[direction].append({
+                            'route': route_id,
+                            'time': time
+                        })
+
+                        station['routes'].add(route_id)
+                        try:
+                            routes[route_id].add(stop_id)
+                        except KeyError, e:
+                            routes[route_id] = set([stop_id])
 
         # sort by time
-        for station in self._stations:
+        for station in stations:
             if station['S'] or station['N']:
                 station['hasData'] = True
                 station['S'] = sorted(station['S'], key=itemgetter('time'))[:self._MAX_TRAINS]
                 station['N'] = sorted(station['N'], key=itemgetter('time'))[:self._MAX_TRAINS]
             else:
                 station['hasData'] = False
+
+        with self._read_lock:
+            self._stops = stops
+            self._routes = routes
+            self._stations = stations
+
+        self._update_lock.release()
 
     def last_update(self):
         return self._last_update
@@ -124,7 +173,9 @@ class MtaSanitizer(object):
         if self.is_expired():
             self.update()
 
-        sortable_stations = copy.copy(self._stations)
+        with self._read_lock:
+            sortable_stations = copy.deepcopy(self._stations)
+
         sortable_stations.sort(key=lambda x: distance(x['location'], point))
         return sortable_stations[:limit]
 
@@ -135,7 +186,10 @@ class MtaSanitizer(object):
         if self.is_expired():
             self.update()
 
-        return {k: self._stops[k] for k in self._routes[route]}
+        with self._read_lock:
+            out = {k: self._stops[k] for k in self._routes[route]}
+
+        return out
 
     def is_expired(self):
         if not self._THREADED and self._EXPIRES_SECONDS:
@@ -143,33 +197,3 @@ class MtaSanitizer(object):
             return age.total_seconds() > self._EXPIRES_SECONDS
         else:
             return False
-
-    def _process_feed(self, rawData):
-        for entity in rawData.entity:
-            if entity.trip_update:
-                for update in entity.trip_update.stop_time_update:
-                    time = update.arrival.time
-                    if time == 0:
-                        time = update.departure.time
-
-                    time = datetime.datetime.fromtimestamp(time, self._tz)
-                    if time < self._last_update or time > self._MAX_TIME:
-                        continue
-
-                    route_id = entity.trip_update.trip.route_id
-                    stop_id = str(update.stop_id[:3])
-                    station = self._stops[stop_id]
-                    direction = update.stop_id[3]
-
-                    station[direction].append({
-                        'route': route_id,
-                        'time': time
-                    })
-
-                    station['routes'].add(route_id)
-
-                    try:
-                        self._routes[route_id].add(stop_id)
-                    except KeyError, e:
-                        self._routes[route_id] = set([stop_id])
-

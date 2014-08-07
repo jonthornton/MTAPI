@@ -20,8 +20,9 @@ app = Flask(__name__)
 app.config.update(
     MAX_TRAINS=10,
     MAX_MINUTES=30,
-    CACHE_SECONDS=10,
-    THREADED=True
+    CACHE_SECONDS=60,
+    THREADED=True,
+    USE_RELOADER=False
 )
 app.config.from_envvar('MTA_SETTINGS')
 
@@ -46,16 +47,6 @@ mta = mta_realtime.MtaSanitizer(
     max_minutes=app.config['MAX_MINUTES'],
     expires_seconds=app.config['CACHE_SECONDS'],
     threaded=app.config['THREADED'])
-
-# def thread_loop(seconds):
-#     global mta, app
-#     time.sleep(seconds)
-#     mta.update()
-#     print mta.last_update()
-#     threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], )).start()
-
-# if app.config['THREADED']:
-#     threading.Thread(target=thread_loop, args=(app.config['CACHE_SECONDS'], ), daemon=True).start()
 
 @app.route('/')
 @cross_origin(headers=['Content-Type'])
