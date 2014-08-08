@@ -11,18 +11,16 @@
 
 import mta_realtime
 from flask import Flask, request, jsonify, render_template
-from flask_cors import cross_origin
 from flask.json import JSONEncoder
 from datetime import datetime
-import time
+from functools import wraps
 
 app = Flask(__name__)
 app.config.update(
     MAX_TRAINS=10,
     MAX_MINUTES=30,
     CACHE_SECONDS=60,
-    THREADED=True,
-    USE_RELOADER=False
+    THREADED=True
 )
 app.config.from_envvar('MTA_SETTINGS')
 
@@ -48,8 +46,22 @@ mta = mta_realtime.MtaSanitizer(
     expires_seconds=app.config['CACHE_SECONDS'],
     threaded=app.config['THREADED'])
 
+def cross_origin(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        resp = f(*args, **kwargs)
+
+        if app.config['DEBUG']:
+            resp.headers['Access-Control-Allow-Origin'] = '*'
+        elif 'CROSS_ORIGIN' in app.config:
+            resp.headers['Access-Control-Allow-Origin'] = app.config['CROSS_ORIGIN']
+
+        return resp
+
+    return decorated_function
+
 @app.route('/')
-@cross_origin(headers=['Content-Type'])
+@cross_origin
 def index():
     return jsonify({
         'title': 'mta-api-sanity',
@@ -57,7 +69,7 @@ def index():
         })
 
 @app.route('/by-location', methods=['GET'])
-@cross_origin(headers=['Content-Type'])
+@cross_origin
 def by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
@@ -75,7 +87,7 @@ def by_location():
         })
 
 @app.route('/by-route/<route>', methods=['GET'])
-@cross_origin(headers=['Content-Type'])
+@cross_origin
 def by_route(route):
     return jsonify({
         'updated': mta.last_update(),
@@ -83,7 +95,7 @@ def by_route(route):
         })
 
 @app.route('/routes', methods=['GET'])
-@cross_origin(headers=['Content-Type'])
+@cross_origin
 def routes():
     return jsonify({
         'updated': mta.last_update(),
@@ -91,4 +103,4 @@ def routes():
         })
 
 if __name__ == '__main__':
-    app.run()
+    app.run(use_reloader=False)
