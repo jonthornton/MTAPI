@@ -116,9 +116,13 @@ class MtaSanitizer(object):
 
         for i, feed_url in enumerate(feed_urls):
             mta_data = gtfs_realtime_pb2.FeedMessage()
-            with contextlib.closing(urllib2.urlopen(feed_url)) as r:
-                data = r.read()
-                mta_data.ParseFromString(data)
+            try:
+                with contextlib.closing(urllib2.urlopen(feed_url)) as r:
+                    data = r.read()
+                    mta_data.ParseFromString(data)
+            except URLError, e:
+                self.logger.error('Couldn\'t connect to MTA server. Code '+str(e.code))
+                return
 
             self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
             self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
