@@ -1,21 +1,64 @@
 import gtfs_realtime_pb2, nyct_subway_pb2
 import urllib2, contextlib, datetime, copy
 from operator import itemgetter
-from pprint import pprint
 from pytz import timezone
 import threading, time
-import csv, math
+import csv, math, json
 import logging
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+
+def generate_stations_file(stops_file, stations_file):
+    stations = []
+
+    with open(stops_file, 'rb') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row['parent_station']:
+                continue
+
+            stop = {
+                'id': str(row['stop_id']),
+                'name': row['stop_name'],
+                'location': (float(row['stop_lat']), float(row['stop_lon']))
+            }
+
+            _group_stop(stop, stations)
+
+    for station in stations:
+        # TODO: improve name grouping
+        station['name'] = ' / '.join(station['name'])
+
+    with open(stations_file, 'wb') as f:
+        json.dump(stations, f, sort_keys=True, indent=4, separators=(',', ': '))
+
+def _group_stop(stop, stations):
+    GROUPING_THRESHOLD = 0.0025
+
+    # O(n^2) - can probably be improved
+    for station in stations:
+        if distance(stop['location'], station['location']) < GROUPING_THRESHOLD:
+            station['name'].add(stop['name'])
+            station['stops'][stop['id']] = stop['location']
+            new_lat = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
+            new_lon = sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
+            station['location'] = (new_lat, new_lon)
+            return
+
+    station = {
+        'name': set([stop['name']]),
+        'location': stop['location'],
+        'stops': { stop['id']: stop['location'] }
+    }
+    stations.append(station)
 
 class MtaSanitizer(object):
 
     _last_update = 0
     _tz = timezone('US/Eastern')
 
-    def __init__(self, key, stops_file, expires_seconds=None, max_trains=10, max_minutes=30, threaded=False):
+    def __init__(self, key, stations_file, expires_seconds=None, max_trains=10, max_minutes=30, threaded=False):
         self._KEY = key
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
@@ -29,23 +72,12 @@ class MtaSanitizer(object):
         self.logger = logging.getLogger(__name__)
 
         # initialize the stations database
-        with open(stops_file, 'rb') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                if row['parent_station']:
-                    continue
-
-                stop = {
-                    'id': str(row['stop_id']),
-                    'name': row['stop_name'],
-                    'location': (float(row['stop_lat']), float(row['stop_lon']))
-                }
-
-                self._group_stop(stop)
-
-        for station in self._stations:
-            # TODO: improve name grouping
-            station['name'] = ' / '.join(station['name'])
+        try:
+            with open(stations_file, 'rb') as f:
+                self._stations = json.load(f)
+        except IOError as e:
+            print 'Couldn\'t load stations file '+stations_file
+            exit()
 
         self._update()
 
@@ -67,29 +99,6 @@ class MtaSanitizer(object):
                 stops[stop_id] = station
 
         return stops
-
-    def _group_stop(self, stop):
-        GROUPING_THRESHOLD = 0.0025
-
-        # this is O(n^2) - can definitely be improved
-        for station in self._stations:
-            if distance(stop['location'], station['location']) < GROUPING_THRESHOLD:
-                station['name'].add(stop['name'])
-                station['stops'][stop['id']] = stop['location']
-                new_lat = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
-                new_lon = sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
-                station['location'] = (new_lat, new_lon)
-                return
-
-        station = {
-            'name': set([stop['name']]),
-            'location': stop['location'],
-            'stops': { stop['id']: stop['location'] },
-            'N': [],
-            'S': []
-        }
-        self._stations.append(station)
-
 
     def _update(self):
         if not self._update_lock.acquire(False):
