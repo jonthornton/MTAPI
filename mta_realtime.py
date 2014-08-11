@@ -69,7 +69,7 @@ class MtaSanitizer(object):
         return stops
 
     def _group_stop(self, stop):
-        GROUPING_THRESHOLD = 0.003
+        GROUPING_THRESHOLD = 0.0025
 
         # this is O(n^2) - can definitely be improved
         for station in self._stations:
@@ -191,7 +191,9 @@ class MtaSanitizer(object):
             self.update()
 
         with self._read_lock:
-            out = {k: self._stops[k] for k in self._routes[route]}
+            out = [ self._stops[k] for k in self._routes[route] ]
+
+        out.sort(key=lambda x: x['name'])
 
         return out
 
