@@ -148,6 +148,9 @@ class MtaSanitizer(object):
                             continue
 
                         route_id = entity.trip_update.trip.route_id
+                        if route_id == 'GS':
+                            route_id = 'S'
+
                         stop_id = str(update.stop_id[:3])
                         station = stops[stop_id]
                         direction = update.stop_id[3]

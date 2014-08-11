@@ -10,7 +10,7 @@
 """
 
 import mta_realtime
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, abort
 from flask.json import JSONEncoder
 from datetime import datetime
 from functools import wraps
@@ -89,10 +89,13 @@ def by_location():
 @app.route('/by-route/<route>', methods=['GET'])
 @cross_origin
 def by_route(route):
-    return jsonify({
-        'updated': mta.last_update(),
-        'data': mta.get_by_route(route)
-        })
+    try:
+        return jsonify({
+            'updated': mta.last_update(),
+            'data': mta.get_by_route(route)
+            })
+    except KeyError as e:
+        abort(404)
 
 @app.route('/routes', methods=['GET'])
 @cross_origin
