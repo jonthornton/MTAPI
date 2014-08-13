@@ -67,7 +67,7 @@ class MtaSanitizer(object):
         self._stations = []
         self._stops = {}
         self._routes = {}
-        self._read_lock = threading.Lock()
+        self._read_lock = threading.RLock()
         self._update_lock = threading.Lock()
         self.logger = logging.getLogger(__name__)
 
@@ -82,9 +82,12 @@ class MtaSanitizer(object):
         self._update()
 
         if self._THREADED:
-            self._thread = threading.Thread(target=self._threaded_update)
-            self._thread.daemon = True
-            self._thread.start()
+            self._start_thread()
+
+    def _start_thread(self):
+        self._thread = threading.Thread(target=self._threaded_update)
+        self._thread.daemon = True
+        self._thread.start()
 
     def _threaded_update(self):
         while True:
@@ -129,7 +132,7 @@ class MtaSanitizer(object):
                 with contextlib.closing(urllib2.urlopen(feed_url)) as r:
                     data = r.read()
                     mta_data.ParseFromString(data)
-            except URLError, e:
+            except urllib2.URLError, e:
                 self.logger.error('Couldn\'t connect to MTA server. Code '+str(e.code))
                 return
 
@@ -210,7 +213,12 @@ class MtaSanitizer(object):
         return out
 
     def is_expired(self):
-        if not self._THREADED and self._EXPIRES_SECONDS:
+        if self._THREADED:
+            # check that the update thread is still running
+            if not self._thread.is_alive():
+                self._start_thread()
+
+        elif self._EXPIRES_SECONDS:
             age = datetime.datetime.now(self._tz) - self._last_update
             return age.total_seconds() > self._EXPIRES_SECONDS
         else:
