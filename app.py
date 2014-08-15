@@ -14,6 +14,7 @@ from flask import Flask, request, jsonify, render_template, abort
 from flask.json import JSONEncoder
 from datetime import datetime
 from functools import wraps
+import logging
 
 app = Flask(__name__)
 app.config.update(
@@ -23,6 +24,12 @@ app.config.update(
     THREADED=True
 )
 app.config.from_envvar('MTA_SETTINGS')
+
+
+# set debug logging
+if app.debug:
+    logging.basicConfig(level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 class CustomJSONEncoder(JSONEncoder):
 

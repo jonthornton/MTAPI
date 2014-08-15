@@ -85,6 +85,7 @@ class MtaSanitizer(object):
             self._start_thread()
 
     def _start_thread(self):
+        self.logger.info('Starting update thread...')
         self._thread = threading.Thread(target=self._threaded_update)
         self._thread.daemon = True
         self._thread.start()
@@ -132,7 +133,7 @@ class MtaSanitizer(object):
                 with contextlib.closing(urllib2.urlopen(feed_url)) as r:
                     data = r.read()
                     mta_data.ParseFromString(data)
-            except urllib2.URLError, e:
+            except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
                 self.logger.error('Couldn\'t connect to MTA server. Code '+str(e.code))
                 return
 
