@@ -27,7 +27,7 @@ The API key provided at http://datamine.mta.info/user/register
 *default: None*
 
 - **STATIONS_FILE** (required)  
-Path to the JSON file containing station information. See [Generating a Stations File]() for more info.  
+Path to the JSON file containing station information. See [Generating a Stations File](#generating-a-stations-file) for more info.  
 *default: None*
 
 - **CROSS_ORIGIN**    
