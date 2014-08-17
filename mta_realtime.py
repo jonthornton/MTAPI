@@ -5,6 +5,7 @@ from pytz import timezone
 import threading, time
 import csv, math, json
 import logging
+import google.protobuf.message
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -133,8 +134,9 @@ class MtaSanitizer(object):
                 with contextlib.closing(urllib2.urlopen(feed_url)) as r:
                     data = r.read()
                     mta_data.ParseFromString(data)
+
             except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
-                self.logger.error('Couldn\'t connect to MTA server. Code '+str(e.code))
+                self.logger.error('Couldn\'t connect to MTA server: ' + str(e))
                 return
 
             self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
@@ -218,6 +220,7 @@ class MtaSanitizer(object):
             # check that the update thread is still running
             if not self._thread.is_alive():
                 self._start_thread()
+                return False
 
         elif self._EXPIRES_SECONDS:
             age = datetime.datetime.now(self._tz) - self._last_update
