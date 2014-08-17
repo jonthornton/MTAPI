@@ -10,7 +10,7 @@ import google.protobuf.message
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
-def generate_stations_file(stops_file, stations_file):
+def generate_stations_file(stops_file, stations_file, grouping_threshold):
     stations = []
 
     with open(stops_file, 'rb') as f:
@@ -25,7 +25,7 @@ def generate_stations_file(stops_file, stations_file):
                 'location': (float(row['stop_lat']), float(row['stop_lon']))
             }
 
-            _group_stop(stop, stations)
+            _group_stop(stop, stations, grouping_threshold)
 
     for station in stations:
         # TODO: improve name grouping
@@ -34,12 +34,10 @@ def generate_stations_file(stops_file, stations_file):
     with open(stations_file, 'wb') as f:
         json.dump(stations, f, sort_keys=True, indent=4, separators=(',', ': '))
 
-def _group_stop(stop, stations):
-    GROUPING_THRESHOLD = 0.0025
-
-    # O(n^2) - can probably be improved
+def _group_stop(stop, stations, grouping_threshold):
+    # O(n^2) when used with outer loop - can probably be improved
     for station in stations:
-        if distance(stop['location'], station['location']) < GROUPING_THRESHOLD:
+        if distance(stop['location'], station['location']) < grouping_threshold:
             station['name'].add(stop['name'])
             station['stops'][stop['id']] = stop['location']
             new_lat = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
