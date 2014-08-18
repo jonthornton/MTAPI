@@ -135,6 +135,7 @@ class MtaSanitizer(object):
 
             except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
                 self.logger.error('Couldn\'t connect to MTA server: ' + str(e))
+                self._update_lock.release()
                 return
 
             self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
