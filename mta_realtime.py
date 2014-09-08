@@ -81,18 +81,19 @@ class MtaSanitizer(object):
         self._update()
 
         if self._THREADED:
-            self._start_thread()
+            self._start_timer()
 
-    def _start_thread(self):
+    def _start_timer(self):
         self.logger.info('Starting update thread...')
-        self._thread = threading.Thread(target=self._threaded_update)
-        self._thread.daemon = True
-        self._thread.start()
+        self._timer_thread = threading.Thread(target=self._update_timer)
+        self._timer_thread.daemon = True
+        self._timer_thread.start()
 
-    def _threaded_update(self):
+    def _update_timer(self):
         while True:
             time.sleep(self._EXPIRES_SECONDS)
-            self._update()
+            self._update_thread = threading.Thread(target=self._update)
+            self._update_thread.start()
 
     @staticmethod
     def _build_stops_index(stations):
@@ -105,6 +106,7 @@ class MtaSanitizer(object):
 
     def _update(self):
         if not self._update_lock.acquire(False):
+            self.logger.info('update locked!')
             return
 
         self.logger.info('updating...')
@@ -171,6 +173,8 @@ class MtaSanitizer(object):
                         except KeyError, e:
                             routes[route_id] = set([stop_id])
 
+
+
         # sort by time
         for station in stations:
             if station['S'] or station['N']:
@@ -217,8 +221,8 @@ class MtaSanitizer(object):
     def is_expired(self):
         if self._THREADED:
             # check that the update thread is still running
-            if not self._thread.is_alive():
-                self._start_thread()
+            if not self._timer_thread.is_alive():
+                self._start_timer()
                 return False
 
         elif self._EXPIRES_SECONDS:
