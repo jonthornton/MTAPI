@@ -1,4 +1,4 @@
-MTA_KEY = '6377de1dd6030f4c8680632c4e50eb64'
+MTA_KEY = 'your-mta-key-here'
 STATIONS_FILE = './stations.json'
 CROSS_ORIGIN = 'http://yourdomain.com'
 MAX_TRAINS=10
