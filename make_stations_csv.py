@@ -1,16 +1,14 @@
 # Given GTFS stops.txt and transfers.txt, creates a stations.csv file of station groupings based on stations connected in transfers.txt.
 # The stations.csv file can be edited to relabel and reorganize the groupings (groupings of more than one station appear at the top of the file).
-# The edited stations.csv can be converted to a stations.json by generate_stations_json.py.
+# The edited stations.csv can be converted to a stations.json by make_stations_json.py.
 # Assumes that transfers.txt only refers to GTFS "stations" (location_type 1) and that transfers.txt has transitive closure.
 
 import argparse, csv, json, sys
-import mta_realtime
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate stations JSON file for MtaSanitize server.')
+    parser = argparse.ArgumentParser(description='Generate stations CSV file for use with make_stations_json.py')
     parser.add_argument('stops_file', default='stops.txt')
     parser.add_argument('transfers_file', default='transfers.txt')
-
     args = parser.parse_args()
 
     stops = {}
@@ -57,7 +55,7 @@ def main():
 
     # write the non-grouped stops
     for stop_id in stops:
-        writer.writerow([stop_id, stops['stop_id']['name'], stops['stop_id']['lat'], stops['stop_id']['lon'], stop_id])
+        writer.writerow([stop_id, stops[stop_id]['name'], stops[stop_id]['lat'], stops[stop_id]['lon'], stop_id])
 
 
 if __name__ == '__main__':
