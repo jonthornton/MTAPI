@@ -10,48 +10,6 @@ import google.protobuf.message
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
-def generate_stations_file(stops_file, stations_file, grouping_threshold):
-    stations = []
-
-    with open(stops_file, 'rb') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            if row['parent_station']:
-                continue
-
-            stop = {
-                'id': str(row['stop_id']),
-                'name': row['stop_name'],
-                'location': (float(row['stop_lat']), float(row['stop_lon']))
-            }
-
-            _group_stop(stop, stations, grouping_threshold)
-
-    for station in stations:
-        # TODO: improve name grouping
-        station['name'] = ' / '.join(station['name'])
-
-    with open(stations_file, 'wb') as f:
-        json.dump(stations, f, sort_keys=True, indent=4, separators=(',', ': '))
-
-def _group_stop(stop, stations, grouping_threshold):
-    # O(n^2) when used with outer loop - can probably be improved
-    for station in stations:
-        if distance(stop['location'], station['location']) < grouping_threshold:
-            station['name'].add(stop['name'])
-            station['stops'][stop['id']] = stop['location']
-            new_lat = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
-            new_lon = sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
-            station['location'] = (new_lat, new_lon)
-            return
-
-    station = {
-        'name': set([stop['name']]),
-        'location': stop['location'],
-        'stops': { stop['id']: stop['location'] }
-    }
-    stations.append(station)
-
 class MtaSanitizer(object):
 
     _last_update = 0
