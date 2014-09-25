@@ -204,6 +204,8 @@ Returns all stations on the provided train route.
 }
 ```
 
+- **/by-id/[id],[id],[id]...**  
+Returns the stations with the provided IDs, in the order provided. IDs should be comma separated with no space characters.
 
 - **/routes**  
 Lists available routes.  
@@ -223,7 +225,6 @@ Lists available routes.
     "updated": "2014-08-29T15:09:57-04:00"
 }
 ```
-
 
 ## Running the server
 

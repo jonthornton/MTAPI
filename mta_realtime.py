@@ -32,6 +32,9 @@ class MtaSanitizer(object):
         try:
             with open(stations_file, 'rb') as f:
                 self._stations = json.load(f)
+                for idx, station in enumerate(self._stations):
+                    station['id'] = idx
+
         except IOError as e:
             print 'Couldn\'t load stations file '+stations_file
             exit()
@@ -173,6 +176,15 @@ class MtaSanitizer(object):
             out = [ self._stops[k] for k in self._routes[route] ]
 
         out.sort(key=lambda x: x['name'])
+
+        return out
+
+    def get_by_id(self, ids):
+        if self.is_expired():
+            self.update()
+
+        with self._read_lock:
+            out = [ self._stations[k] for k in ids ]
 
         return out
 
