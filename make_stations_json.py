@@ -24,8 +24,10 @@ def main():
 
     for station in stations.values():
         station['name'] = ' / '.join(station['name'])
-        station['lat'] = sum(v[0] for v in station['stops'].values()) / float(len(station['stops']))
-        station['lon'] = sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
+        station['location'] = [
+            sum(v[0] for v in station['stops'].values()) / float(len(station['stops'])),
+            sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
+        ]
 
     json.dump(stations.values(), sys.stdout, sort_keys=True, indent=4, separators=(',', ': '))
 
