@@ -37,6 +37,7 @@ Returns the 5 stations nearest the provided lat/lon pair.
                 ...
             ],
             "hasData": true,
+            "id": 123,
             "location": [
                 40.725606,
                 -73.9954315
@@ -81,6 +82,7 @@ Returns the 5 stations nearest the provided lat/lon pair.
                 ...
             ],
             "hasData": true,
+            "id": 124,
             "location": [
                 40.723315,
                 -73.9974215
@@ -140,6 +142,7 @@ Returns all stations on the provided train route.
                 ...
             ],
             "hasData": true,
+            "id": 12,
             "location": [
                 40.804138,
                 -73.937594
@@ -182,6 +185,7 @@ Returns all stations on the provided train route.
                 ...
             ],
             "hasData": true,
+            "id": 123,
             "location": [
                 40.813224,
                 -73.929849
