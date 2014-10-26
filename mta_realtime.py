@@ -12,7 +12,7 @@ def distance(p1, p2):
 
 class MtaSanitizer(object):
 
-    _last_update = 0
+    _LOCK_TIMEOUT = 300
     _tz = timezone('US/Eastern')
 
     def __init__(self, key, stations_file, expires_seconds=None, max_trains=10, max_minutes=30, threaded=False):
@@ -67,9 +67,16 @@ class MtaSanitizer(object):
 
     def _update(self):
         if not self._update_lock.acquire(False):
-            self.logger.info('update locked!')
+            self.logger.info('Update locked!')
+
+            lock_age = datetime.datetime.now() - self._update_lock_time
+            if lock_age.total_seconds() > self._LOCK_TIMEOUT:
+                self._update_lock = threading.Lock()
+                self.logger.info('Cleared expired update lock')
+
             return
 
+        self._update_lock_time = datetime.datetime.now()
         self.logger.info('updating...')
 
         # create working copy for thread safety
