@@ -288,6 +288,12 @@ Usage: `$ python generate_stations_file.py stops.txt stations.json --threshold=0
 
 Submit a [GitHub Issues request](https://github.com/jonthornton/MtaSanitizer/issues). 
 
+## Projects
+
+Here are some projects that use MtaSanitizer.
+
+* http://wheresthefuckingtrain.com
+
 ## License
 
 The project is made available under the MIT license.
