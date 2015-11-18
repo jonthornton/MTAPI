@@ -1,10 +1,10 @@
 # MTA Realtime API JSON Proxy
 
-MtaSanitizer is a small HTTP server that converts the [MTA's realtime subway feed](http://datamine.mta.info/feed-documentation) from [Protocol Buffers/GTFS](https://developers.google.com/transit/gtfs/) to JSON. The app also adds caching and makes it possible to retreive information by location and train line. 
+MTAPI is a small HTTP server that converts the [MTA's realtime subway feed](http://datamine.mta.info/feed-documentation) from [Protocol Buffers/GTFS](https://developers.google.com/transit/gtfs/) to JSON. The app also adds caching and makes it possible to retreive information by location and train line. 
 
 ## Active Development
 
-This project is under active development and may contain bugs. Feedback is very welcome.
+This project is under active development and any part of the API may change. Feedback is very welcome.
 
 ## Endpoints
 
@@ -232,7 +232,7 @@ Lists available routes.
 
 ## Running the server
 
-MtaSanitizer is a Flask app designed to run under Python 2.7.
+MTAPI is a Flask app designed to run under Python 2.7.
 
 1. Create a settings file. A sample is provided as `settings.cfg.sample`.
 2. Set up your environment and install dependencies.  
@@ -280,17 +280,17 @@ Standard Flask option. Will enabled enhanced logging and wildcard CORS headers.
 
 ## Generating a Stations File
 
-The MTA provides several static data files about the subway system but none include canonical information about each station. MtaSanitizer includes a script that will parse the `stops.txt` dataset provided by the MTA and attempt to group the different train stops into subway stations. MtaSanitizer will use this JSON file for station names and locations. The grouping is not perfect and editing the resulting JSON file is encouraged.
+The MTA provides several static data files about the subway system but none include canonical information about each station. MTAPI includes a script that will parse the `stops.txt` dataset provided by the MTA and attempt to group the different train stops into subway stations. MTAPI will use this JSON file for station names and locations. The grouping is not perfect and editing the resulting JSON file is encouraged.
 
 Usage: `$ python generate_stations_file.py stops.txt stations.json --threshold=0.0025`
 
 ## Help
 
-Submit a [GitHub Issues request](https://github.com/jonthornton/MtaSanitizer/issues). 
+Submit a [GitHub Issues request](https://github.com/jonthornton/MTAPI/issues). 
 
 ## Projects
 
-Here are some projects that use MtaSanitizer.
+Here are some projects that use MTAPI.
 
 * http://wheresthefuckingtrain.com
 
