@@ -164,7 +164,7 @@ class MtaSanitizer(object):
 
     def get_by_point(self, point, limit=5):
         if self.is_expired():
-            self.update()
+            self._update()
 
         with self._read_lock:
             sortable_stations = copy.deepcopy(self._stations)
@@ -177,7 +177,7 @@ class MtaSanitizer(object):
 
     def get_by_route(self, route):
         if self.is_expired():
-            self.update()
+            self._update()
 
         with self._read_lock:
             out = [ self._stops[k] for k in self._routes[route] ]
@@ -188,7 +188,7 @@ class MtaSanitizer(object):
 
     def get_by_id(self, ids):
         if self.is_expired():
-            self.update()
+            self._update()
 
         with self._read_lock:
             out = [ self._stations[k] for k in ids ]
