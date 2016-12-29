@@ -71,8 +71,8 @@ def cross_origin(f):
 @cross_origin
 def index():
     return jsonify({
-        'title': 'MtaSanitizer',
-        'readme': 'Visit https://github.com/jonthornton/MtaSanitizer for more info'
+        'title': 'MTAPI',
+        'readme': 'Visit https://github.com/jonthornton/MTAPI for more info'
         })
 
 @app.route('/by-location', methods=['GET'])
@@ -89,8 +89,8 @@ def by_location():
         return response
 
     return jsonify({
-        'updated': mta.last_update(),
-        'data': mta.get_by_point(location, 5)
+        'data': mta.get_by_point(location, 5),
+        'updated': mta.last_update()
         })
 
 @app.route('/by-route/<route>', methods=['GET'])
@@ -98,8 +98,8 @@ def by_location():
 def by_route(route):
     try:
         return jsonify({
-            'updated': mta.last_update(),
-            'data': mta.get_by_route(route)
+            'data': mta.get_by_route(route),
+            'updated': mta.last_update()
             })
     except KeyError as e:
         abort(404)
@@ -110,8 +110,8 @@ def by_index(id_string):
     ids = [ int(i) for i in id_string.split(',') ]
     try:
         return jsonify({
-            'updated': mta.last_update(),
-            'data': mta.get_by_id(ids)
+            'data': mta.get_by_id(ids),
+            'updated': mta.last_update()
             })
     except KeyError as e:
         abort(404)
@@ -120,8 +120,8 @@ def by_index(id_string):
 @cross_origin
 def routes():
     return jsonify({
-        'updated': mta.last_update(),
-        'data': mta.get_routes()
+        'data': mta.get_routes(),
+        'updated': mta.last_update()
         })
 
 if __name__ == '__main__':
