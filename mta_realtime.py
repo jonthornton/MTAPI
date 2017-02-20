@@ -17,6 +17,7 @@ class MtaSanitizer(object):
     _FEED_URLS = [
         'http://datamine.mta.info/mta_esi.php?feed_id=1',
         'http://datamine.mta.info/mta_esi.php?feed_id=2',
+        'http://datamine.mta.info/mta_esi.php?feed_id=16',
         'http://datamine.mta.info/mta_esi.php?feed_id=21'
     ]
 
@@ -137,6 +138,11 @@ class MtaSanitizer(object):
                             route_id = 'S'
 
                         stop_id = str(update.stop_id[:3])
+
+                        if stop_id not in stops:
+                            self.logger.info('Stop %s not found', stop_id)
+                            continue
+
                         station = stops[stop_id]
                         station[direction].append({
                             'route': route_id,
