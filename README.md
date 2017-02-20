@@ -234,13 +234,15 @@ Lists available routes.
 
 MTAPI is a Flask app designed to run under Python 2.7.
 
-1. Create a settings file. A sample is provided as `settings.cfg.sample`.
+1. Create a `settings.cfg` file. A sample is provided as `settings.cfg.sample`.
 2. Set up your environment and install dependencies.  
 `$ virtualenv .venv`  
 `$ source .venv/bin/activate`  
 `$ pip install -r requirements.txt`
 3. Run the server  
-`$ export MTA_SETTINGS=your_settings_file.cfg; python app.py`
+`$ python app.py`
+
+If your configuration is named something other than `settings.cfg`, set the `MTAPI_SETTINGS` env variable to your configuration path.
 
 This app makes use of Python threads. If running under uWSGI include the --enable-threads flag.
 
