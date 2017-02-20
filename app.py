@@ -128,7 +128,7 @@ def by_index(id_string):
 @cross_origin
 def routes():
     return jsonify({
-        'data': mta.get_routes(),
+        'data': sorted(mta.get_routes()),
         'updated': mta.last_update()
         })
 
