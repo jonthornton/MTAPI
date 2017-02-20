@@ -2,5 +2,6 @@
 *.sublime-*
 settings.cfg
 stops.txt
+transfers.txt
 *.log
 *.pyc
