@@ -1,4 +1,4 @@
-import gtfs_realtime_pb2, nyct_subway_pb2
+import nyct_subway_pb2
 import urllib2, contextlib, datetime, copy
 from operator import itemgetter
 from pytz import timezone
@@ -14,6 +14,11 @@ class MtaSanitizer(object):
 
     _LOCK_TIMEOUT = 300
     _tz = timezone('US/Eastern')
+    _FEED_URLS = [
+        'http://datamine.mta.info/mta_esi.php?feed_id=1',
+        'http://datamine.mta.info/mta_esi.php?feed_id=2',
+        'http://datamine.mta.info/mta_esi.php?feed_id=21'
+    ]
 
     def __init__(self, key, stations_file, expires_seconds=None, max_trains=10, max_minutes=30, threaded=False):
         self._KEY = key
@@ -27,6 +32,8 @@ class MtaSanitizer(object):
         self._read_lock = threading.RLock()
         self._update_lock = threading.Lock()
         self.logger = logging.getLogger(__name__)
+
+        self._init_feeds_key(key)
 
         # initialize the stations database
         try:
@@ -43,6 +50,9 @@ class MtaSanitizer(object):
 
         if self._THREADED:
             self._start_timer()
+
+    def _init_feeds_key(self, key):
+        self._FEED_URLS = list(map(lambda x: x + '&key=' + key, self._FEED_URLS))
 
     def _start_timer(self):
         self.logger.info('Starting update thread...')
@@ -91,13 +101,8 @@ class MtaSanitizer(object):
         stops = MtaSanitizer._build_stops_index(stations)
         routes = {}
 
-        feed_urls = [
-            'http://datamine.mta.info/mta_esi.php?feed_id=1&key='+self._KEY,
-            'http://datamine.mta.info/mta_esi.php?feed_id=2&key='+self._KEY
-        ]
-
-        for i, feed_url in enumerate(feed_urls):
-            mta_data = gtfs_realtime_pb2.FeedMessage()
+        for i, feed_url in enumerate(self._FEED_URLS):
+            mta_data = nyct_subway_pb2.gtfs_realtime_pb2.FeedMessage()
             try:
                 with contextlib.closing(urllib2.urlopen(feed_url)) as r:
                     data = r.read()
@@ -113,6 +118,11 @@ class MtaSanitizer(object):
 
             for entity in mta_data.entity:
                 if entity.trip_update:
+
+                    trip_meta = entity.trip_update.trip.Extensions[nyct_subway_pb2.nyct_trip_descriptor]
+                    direction_name = nyct_subway_pb2.NyctTripDescriptor.Direction.Name(trip_meta.direction)
+                    direction = direction_name[0]
+
                     for update in entity.trip_update.stop_time_update:
                         time = update.arrival.time
                         if time == 0:
@@ -128,8 +138,6 @@ class MtaSanitizer(object):
 
                         stop_id = str(update.stop_id[:3])
                         station = stops[stop_id]
-                        direction = update.stop_id[3]
-
                         station[direction].append({
                             'route': route_id,
                             'time': time
