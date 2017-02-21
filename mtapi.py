@@ -1,11 +1,10 @@
 import urllib2, contextlib, datetime, copy
 from operator import itemgetter
-from pytz import timezone
 import threading, time
 import csv, math, json
 import logging
 import google.protobuf.message
-from mtaproto.feedresponse import FeedResponse, Trip
+from mtaproto.feedresponse import FeedResponse, Trip, TripStop
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -13,7 +12,6 @@ def distance(p1, p2):
 class Mtapi(object):
 
     _LOCK_TIMEOUT = 300
-    _tz = timezone('US/Eastern')
     _FEED_URLS = [
         'http://datamine.mta.info/mta_esi.php?feed_id=1',
         'http://datamine.mta.info/mta_esi.php?feed_id=2',
@@ -76,6 +74,18 @@ class Mtapi(object):
 
         return stops
 
+    @staticmethod
+    def _load_mta_feed(feed_url):
+        mta_data = None
+        try:
+            with contextlib.closing(urllib2.urlopen(feed_url)) as r:
+                data = r.read()
+                return FeedResponse(data)
+
+        except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
+            self.logger.error('Couldn\'t connect to MTA server: ' + str(e))
+            return False
+
     def _update(self):
         if not self._update_lock.acquire(False):
             self.logger.info('Update locked!')
@@ -103,18 +113,12 @@ class Mtapi(object):
         routes = {}
 
         for i, feed_url in enumerate(self._FEED_URLS):
-            mta_data = None
-            try:
-                with contextlib.closing(urllib2.urlopen(feed_url)) as r:
-                    data = r.read()
-                    mta_data = FeedResponse(data)
+            mta_data = self._load_mta_feed(feed_url)
 
-            except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
-                self.logger.error('Couldn\'t connect to MTA server: ' + str(e))
-                self._update_lock.release()
-                return
+            if not mta_data:
+                continue
 
-            self._last_update = datetime.datetime.fromtimestamp(mta_data.header.timestamp, self._tz)
+            self._last_update = mta_data.timestamp
             self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
             for entity in mta_data.entity:
@@ -126,11 +130,9 @@ class Mtapi(object):
                 direction = trip.direction[0]
 
                 for update in entity.trip_update.stop_time_update:
-                    time = update.arrival.time
-                    if time == 0:
-                        time = update.departure.time
+                    trip_stop = TripStop(update)
 
-                    time = datetime.datetime.fromtimestamp(time, self._tz)
+                    time = trip_stop.time
                     if time < self._last_update or time > self._MAX_TIME:
                         continue
 
