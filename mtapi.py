@@ -1,4 +1,5 @@
 import urllib2, contextlib, datetime, copy
+from collections import defaultdict
 from operator import itemgetter
 import threading, time
 import csv, math, json
@@ -110,7 +111,7 @@ class Mtapi(object):
             station['routes'] = set()
 
         stops = self._build_stops_index(stations)
-        routes = {}
+        routes = defaultdict(set)
 
         for i, feed_url in enumerate(self._FEED_URLS):
             mta_data = self._load_mta_feed(feed_url)
@@ -151,11 +152,7 @@ class Mtapi(object):
                         'time': time
                     })
 
-                    try:
-                        routes[route_id].add(stop_id)
-                    except KeyError, e:
-                        routes[route_id] = set([stop_id])
-
+                    routes[route_id].add(stop_id)
 
 
         # sort by time
