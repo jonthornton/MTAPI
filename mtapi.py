@@ -5,8 +5,7 @@ import threading, time
 import csv, math, json
 import logging
 import google.protobuf.message
-from mtaproto.feedresponse import FeedResponse
-from mtaproto import nyct_subway_pb2
+from mtaproto.feedresponse import FeedResponse, Trip
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
@@ -119,42 +118,43 @@ class Mtapi(object):
             self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
             for entity in mta_data.entity:
-                if entity.trip_update:
+                trip = Trip(entity)
 
-                    trip_meta = entity.trip_update.trip.Extensions[nyct_subway_pb2.nyct_trip_descriptor]
-                    direction_name = nyct_subway_pb2.NyctTripDescriptor.Direction.Name(trip_meta.direction)
-                    direction = direction_name[0]
+                if not trip.is_valid():
+                    continue
 
-                    for update in entity.trip_update.stop_time_update:
-                        time = update.arrival.time
-                        if time == 0:
-                            time = update.departure.time
+                direction = trip.direction[0]
 
-                        time = datetime.datetime.fromtimestamp(time, self._tz)
-                        if time < self._last_update or time > self._MAX_TIME:
-                            continue
+                for update in entity.trip_update.stop_time_update:
+                    time = update.arrival.time
+                    if time == 0:
+                        time = update.departure.time
 
-                        route_id = entity.trip_update.trip.route_id
-                        if route_id == 'GS':
-                            route_id = 'S'
+                    time = datetime.datetime.fromtimestamp(time, self._tz)
+                    if time < self._last_update or time > self._MAX_TIME:
+                        continue
 
-                        stop_id = str(update.stop_id[:3])
+                    route_id = entity.trip_update.trip.route_id
+                    if route_id == 'GS':
+                        route_id = 'S'
 
-                        if stop_id not in stops:
-                            self.logger.info('Stop %s not found', stop_id)
-                            continue
+                    stop_id = str(update.stop_id[:3])
 
-                        station = stops[stop_id]
-                        station[direction].append({
-                            'route': route_id,
-                            'time': time
-                        })
+                    if stop_id not in stops:
+                        self.logger.info('Stop %s not found', stop_id)
+                        continue
 
-                        station['routes'].add(route_id)
-                        try:
-                            routes[route_id].add(stop_id)
-                        except KeyError, e:
-                            routes[route_id] = set([stop_id])
+                    station = stops[stop_id]
+                    station[direction].append({
+                        'route': route_id,
+                        'time': time
+                    })
+
+                    station['routes'].add(route_id)
+                    try:
+                        routes[route_id].add(stop_id)
+                    except KeyError, e:
+                        routes[route_id] = set([stop_id])
 
 
 
