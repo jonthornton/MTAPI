@@ -1,4 +1,3 @@
-import nyct_subway_pb2
 import urllib2, contextlib, datetime, copy
 from operator import itemgetter
 from pytz import timezone
@@ -6,11 +5,13 @@ import threading, time
 import csv, math, json
 import logging
 import google.protobuf.message
+from mtaproto.feedresponse import FeedResponse
+from mtaproto import nyct_subway_pb2
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
-class MtaSanitizer(object):
+class Mtapi(object):
 
     _LOCK_TIMEOUT = 300
     _tz = timezone('US/Eastern')
@@ -99,15 +100,15 @@ class MtaSanitizer(object):
             station['S'] = []
             station['routes'] = set()
 
-        stops = MtaSanitizer._build_stops_index(stations)
+        stops = self._build_stops_index(stations)
         routes = {}
 
         for i, feed_url in enumerate(self._FEED_URLS):
-            mta_data = nyct_subway_pb2.gtfs_realtime_pb2.FeedMessage()
+            mta_data = None
             try:
                 with contextlib.closing(urllib2.urlopen(feed_url)) as r:
                     data = r.read()
-                    mta_data.ParseFromString(data)
+                    mta_data = FeedResponse(data)
 
             except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
                 self.logger.error('Couldn\'t connect to MTA server: ' + str(e))

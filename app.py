@@ -9,7 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-import mta_realtime
+from mtapi import Mtapi
 from flask import Flask, request, jsonify, render_template, abort
 from flask.json import JSONEncoder
 from datetime import datetime
@@ -53,7 +53,7 @@ class CustomJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 app.json_encoder = CustomJSONEncoder
 
-mta = mta_realtime.MtaSanitizer(
+mta = Mtapi(
     app.config['MTA_KEY'],
     app.config['STATIONS_FILE'],
     max_trains=app.config['MAX_TRAINS'],
