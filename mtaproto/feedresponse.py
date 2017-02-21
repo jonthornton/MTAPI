@@ -27,6 +27,12 @@ class Trip(object):
 
         if name == 'direction':
             return self._direction()
+        elif name == 'route_id':
+            if self._pb_data.trip_update.trip.route_id == 'GS':
+                return 'S'
+            else:
+                return self._pb_data.trip_update.trip.route_id
+
 
         return getattr(self._pb_data, name)
 
@@ -47,5 +53,7 @@ class TripStop(object):
         if name == 'time':
             raw_time = self._pb_data.arrival.time or self._pb_data.departure.time
             return datetime.datetime.fromtimestamp(raw_time, _TZ)
+        elif name == 'stop_id':
+            return str(self._pb_data.stop_id[:3])
 
         return getattr(self._pb_data, name)

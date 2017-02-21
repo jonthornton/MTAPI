@@ -128,6 +128,9 @@ class Mtapi(object):
                     continue
 
                 direction = trip.direction[0]
+                route_id = trip.route_id
+
+                station['routes'].add(route_id)
 
                 for update in entity.trip_update.stop_time_update:
                     trip_stop = TripStop(update)
@@ -136,11 +139,7 @@ class Mtapi(object):
                     if time < self._last_update or time > self._MAX_TIME:
                         continue
 
-                    route_id = entity.trip_update.trip.route_id
-                    if route_id == 'GS':
-                        route_id = 'S'
-
-                    stop_id = str(update.stop_id[:3])
+                    stop_id = trip_stop.stop_id
 
                     if stop_id not in stops:
                         self.logger.info('Stop %s not found', stop_id)
@@ -152,7 +151,6 @@ class Mtapi(object):
                         'time': time
                     })
 
-                    station['routes'].add(route_id)
                     try:
                         routes[route_id].add(stop_id)
                     except KeyError, e:
