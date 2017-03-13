@@ -11,10 +11,11 @@ def main():
     with open(args.stations_file, 'rb') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            try:
+
+            if row['parent_id'] in stations:
                 stations[row['parent_id']]['stops'][row['stop_id']] = [float(row['lat']), float(row['lon'])]
                 stations[row['parent_id']]['name'].add(row['name'])
-            except KeyError as e:
+            else:
                 stations[row['parent_id']] = {
                     'name': set([row['name']]),
                     'stops': {
