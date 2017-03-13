@@ -1,6 +1,9 @@
 # Given stations.csv, creates a stations.json of stop groupings where each group's lat/lon is the average of its member stops.
 
 import argparse, csv, json, sys
+from hashlib import md5
+
+ID_LENGTH = 4
 
 def main():
     parser = argparse.ArgumentParser(description='Generate stations JSON file for MtaSanitize server.')
@@ -23,14 +26,22 @@ def main():
                     }
                 }
 
+    keyed_stations = {}
     for station in stations.values():
         station['name'] = ' / '.join(station['name'])
         station['location'] = [
             sum(v[0] for v in station['stops'].values()) / float(len(station['stops'])),
             sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
         ]
+        station['id'] = md5(''.join(station['stops'].keys())).hexdigest()[:ID_LENGTH]
 
-    json.dump(stations.values(), sys.stdout, sort_keys=True, indent=4, separators=(',', ': '))
+        while station['id'] in keyed_stations:
+            # keep hashing til we get a unique ID
+            station['id'] = md5(station['id']).hexdigest()[:ID_LENGTH]
+
+        keyed_stations[station['id']] = station
+
+    json.dump(keyed_stations, sys.stdout, sort_keys=True, indent=4, separators=(',', ': '))
 
 
 if __name__ == '__main__':

@@ -40,8 +40,6 @@ class Mtapi(object):
         try:
             with open(stations_file, 'rb') as f:
                 self._stations = json.load(f)
-                for idx, station in enumerate(self._stations):
-                    station['id'] = idx
 
         except IOError as e:
             print 'Couldn\'t load stations file '+stations_file
@@ -70,9 +68,9 @@ class Mtapi(object):
     @staticmethod
     def _build_stops_index(stations):
         stops = {}
-        for station in stations:
-            for stop_id in station['stops'].keys():
-                stops[stop_id] = station
+        for id in stations:
+            for stop_id in stations[id]['stops'].keys():
+                stops[stop_id] = stations[id]
 
         return stops
 
@@ -106,10 +104,10 @@ class Mtapi(object):
         stations = copy.deepcopy(self._stations)
 
         # clear old times
-        for station in stations:
-            station['N'] = []
-            station['S'] = []
-            station['routes'] = set()
+        for id in stations:
+            stations[id]['N'] = []
+            stations[id]['S'] = []
+            stations[id]['routes'] = set()
 
         stops = self._build_stops_index(stations)
         routes = defaultdict(set)
@@ -132,8 +130,6 @@ class Mtapi(object):
                 direction = trip.direction[0]
                 route_id = trip.route_id
 
-                station['routes'].add(route_id)
-
                 for update in entity.trip_update.stop_time_update:
                     trip_stop = TripStop(update)
 
@@ -148,6 +144,7 @@ class Mtapi(object):
                         continue
 
                     station = stops[stop_id]
+                    station['routes'].add(route_id)
                     station[direction].append({
                         'route': route_id,
                         'time': time
@@ -157,13 +154,13 @@ class Mtapi(object):
 
 
         # sort by time
-        for station in stations:
-            if station['S'] or station['N']:
-                station['hasData'] = True
-                station['S'] = sorted(station['S'], key=itemgetter('time'))[:self._MAX_TRAINS]
-                station['N'] = sorted(station['N'], key=itemgetter('time'))[:self._MAX_TRAINS]
+        for id in stations:
+            if stations[id]['S'] or stations[id]['N']:
+                stations[id]['hasData'] = True
+                stations[id]['S'] = sorted(stations[id]['S'], key=itemgetter('time'))[:self._MAX_TRAINS]
+                stations[id]['N'] = sorted(stations[id]['N'], key=itemgetter('time'))[:self._MAX_TRAINS]
             else:
-                station['hasData'] = False
+                stations[id]['hasData'] = False
 
         with self._read_lock:
             self._stops = stops
