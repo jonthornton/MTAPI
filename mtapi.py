@@ -7,6 +7,8 @@ import logging
 import google.protobuf.message
 from mtaproto.feedresponse import FeedResponse, Trip, TripStop
 
+logger = logging.getLogger(__name__)
+
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
@@ -31,7 +33,6 @@ class Mtapi(object):
         self._routes = {}
         self._read_lock = threading.RLock()
         self._update_lock = threading.Lock()
-        self.logger = logging.getLogger(__name__)
 
         self._init_feeds_key(key)
 
@@ -55,7 +56,7 @@ class Mtapi(object):
         self._FEED_URLS = list(map(lambda x: x + '&key=' + key, self._FEED_URLS))
 
     def _start_timer(self):
-        self.logger.info('Starting update thread...')
+        logger.info('Starting update thread...')
         self._timer_thread = threading.Thread(target=self._update_timer)
         self._timer_thread.daemon = True
         self._timer_thread.start()
@@ -84,22 +85,22 @@ class Mtapi(object):
                 return FeedResponse(data)
 
         except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
-            self.logger.error('Couldn\'t connect to MTA server: ' + str(e))
+            logger.error('Couldn\'t connect to MTA server: ' + str(e))
             return False
 
     def _update(self):
         if not self._update_lock.acquire(False):
-            self.logger.info('Update locked!')
+            logger.info('Update locked!')
 
             lock_age = datetime.datetime.now() - self._update_lock_time
             if lock_age.total_seconds() > self._LOCK_TIMEOUT:
                 self._update_lock = threading.Lock()
-                self.logger.info('Cleared expired update lock')
+                logger.info('Cleared expired update lock')
 
             return
 
         self._update_lock_time = datetime.datetime.now()
-        self.logger.info('updating...')
+        logger.info('updating...')
 
         # create working copy for thread safety
         stations = copy.deepcopy(self._stations)
@@ -143,7 +144,7 @@ class Mtapi(object):
                     stop_id = trip_stop.stop_id
 
                     if stop_id not in stops:
-                        self.logger.info('Stop %s not found', stop_id)
+                        logger.info('Stop %s not found', stop_id)
                         continue
 
                     station = stops[stop_id]
