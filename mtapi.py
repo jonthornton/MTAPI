@@ -28,7 +28,7 @@ class Mtapi(object):
         self._MAX_MINUTES = max_minutes
         self._EXPIRES_SECONDS = expires_seconds
         self._THREADED = threaded
-        self._stations = []
+        self._stations = {}
         self._stops = {}
         self._routes = {}
         self._read_lock = threading.RLock()
@@ -54,12 +54,17 @@ class Mtapi(object):
         self._FEED_URLS = list(map(lambda x: x + '&key=' + key, self._FEED_URLS))
 
     def _start_timer(self):
+        '''Start a long-lived thread to loop infinitely and trigger updates at
+        some regular interval.'''
+
         logger.info('Starting update thread...')
         self._timer_thread = threading.Thread(target=self._update_timer)
         self._timer_thread.daemon = True
         self._timer_thread.start()
 
     def _update_timer(self):
+        '''This method runs in its own thread. Run feed updates in short-lived
+        threads.'''
         while True:
             time.sleep(self._EXPIRES_SECONDS)
             self._update_thread = threading.Thread(target=self._update)
