@@ -76,7 +76,6 @@ class Mtapi(object):
 
     @staticmethod
     def _load_mta_feed(feed_url):
-        mta_data = None
         try:
             with contextlib.closing(urllib2.urlopen(feed_url)) as r:
                 data = r.read()
