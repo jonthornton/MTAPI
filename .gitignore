@@ -5,3 +5,4 @@ stops.txt
 transfers.txt
 *.log
 *.pyc
+.cache

@@ -4,5 +4,7 @@ MarkupSafe==0.23
 Werkzeug==0.9.6
 itsdangerous==0.24
 protobuf==2.5.0
+py==1.4.32
+pytest==3.0.6
 pytz==2014.4
 wsgiref==0.1.2
