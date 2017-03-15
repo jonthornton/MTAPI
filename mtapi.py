@@ -29,7 +29,7 @@ class Mtapi(object):
         self._EXPIRES_SECONDS = expires_seconds
         self._THREADED = threaded
         self._stations = {}
-        self._stops = {}
+        self._stops_to_stations = {}
         self._routes = {}
         self._read_lock = threading.RLock()
         self._update_lock = threading.Lock()
@@ -40,6 +40,7 @@ class Mtapi(object):
         try:
             with open(stations_file, 'rb') as f:
                 self._stations = json.load(f)
+                self._stops_to_stations = self._build_stops_index(self._stations)
 
         except IOError as e:
             print 'Couldn\'t load stations file '+stations_file
@@ -73,9 +74,9 @@ class Mtapi(object):
     @staticmethod
     def _build_stops_index(stations):
         stops = {}
-        for id in stations:
-            for stop_id in stations[id]['stops'].keys():
-                stops[stop_id] = stations[id]
+        for station_id in stations:
+            for stop_id in stations[station_id]['stops'].keys():
+                stops[stop_id] = station_id
 
         return stops
 
@@ -143,13 +144,13 @@ class Mtapi(object):
 
                     stop_id = trip_stop.stop_id
 
-                    if stop_id not in stops:
+                    if stop_id not in self._stops_to_stations:
                         logger.info('Stop %s not found', stop_id)
                         continue
 
-                    station = stops[stop_id]
-                    station['routes'].add(route_id)
-                    station[direction].append({
+                    station_id = self._stops_to_stations[stop_id]
+                    stations[station_id]['routes'].add(route_id)
+                    stations[station_id][direction].append({
                         'route': route_id,
                         'time': time
                     })
@@ -167,7 +168,6 @@ class Mtapi(object):
                 stations[id]['hasData'] = False
 
         with self._read_lock:
-            self._stops = stops
             self._routes = routes
             self._stations = stations
 
@@ -194,7 +194,7 @@ class Mtapi(object):
             self._update()
 
         with self._read_lock:
-            out = [ self._stops[k] for k in self._routes[route] ]
+            out = [ self._stations[self._stops_to_stations[k]] for k in self._routes[route] ]
 
         out.sort(key=lambda x: x['name'])
 
