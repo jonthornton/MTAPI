@@ -105,10 +105,8 @@ def by_location():
 @cross_origin
 def by_route(route):
     try:
-        return jsonify({
-            'data': mta.get_by_route(route),
-            'updated': mta.last_update()
-            })
+        data = mta.get_by_route(route)
+        return _make_envelope(data)
     except KeyError as e:
         abort(404)
 
@@ -117,10 +115,8 @@ def by_route(route):
 def by_index(id_string):
     ids = id_string.split(',')
     try:
-        return jsonify({
-            'data': mta.get_by_id(ids),
-            'updated': mta.last_update()
-            })
+        data = mta.get_by_id(ids)
+        return _make_envelope(data)
     except KeyError as e:
         abort(404)
 
@@ -130,6 +126,15 @@ def routes():
     return jsonify({
         'data': sorted(mta.get_routes()),
         'updated': mta.last_update()
+        })
+
+def _make_envelope(data):
+    reduce_func = lambda a,b: a if a['last_update'] > b['last_update'] else b
+    time = reduce(reduce_func, data)['last_update']
+
+    return jsonify({
+        'data': data,
+        'updated': time
         })
 
 if __name__ == '__main__':

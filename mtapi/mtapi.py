@@ -24,12 +24,13 @@ class Mtapi(object):
         def __getitem__(self, key):
             return self.json[key]
 
-        def add_train(self, route_id, direction, time):
+        def add_train(self, route_id, direction, train_time, feed_time):
             self.routes.add(route_id)
             self.trains[direction].append({
                 'route': route_id,
-                'time': time
+                'time': train_time
             })
+            self.last_update = feed_time
             self.has_data = True
 
         def clear_train_data(self):
@@ -46,7 +47,8 @@ class Mtapi(object):
             out = {
                 'N': self.trains['N'],
                 'S': self.trains['S'],
-                'routes': self.routes
+                'routes': self.routes,
+                'last_update': self.last_update
             }
             out.update(self.json)
             return out
@@ -89,6 +91,7 @@ class Mtapi(object):
             self.threader = _MtapiThreader(self, expires_seconds)
             self.threader.start_timer()
 
+    @staticmethod
     def _init_feeds_key(key, urls):
         return list(map(lambda x: x + '&key=' + key, urls))
 
@@ -155,7 +158,10 @@ class Mtapi(object):
                         continue
 
                     station_id = self._stops_to_stations[stop_id]
-                    stations[station_id].add_train(route_id, direction, trip_stop.time)
+                    stations[station_id].add_train(route_id,
+                                                   direction,
+                                                   trip_stop.time,
+                                                   mta_data.timestamp)
 
                     routes[route_id].add(stop_id)
 
