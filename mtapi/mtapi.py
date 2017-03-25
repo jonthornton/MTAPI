@@ -15,6 +15,43 @@ def distance(p1, p2):
 
 class Mtapi(object):
 
+    class _Station(object):
+        def __init__(self, json):
+            self.json = json
+            self.trains = {}
+            self.clear_train_data()
+
+        def __getitem__(self, key):
+            return self.json[key]
+
+        def add_train(self, route_id, direction, time):
+            self.routes.add(route_id)
+            self.trains[direction].append({
+                'route': route_id,
+                'time': time
+            })
+            self.has_data = True
+
+        def clear_train_data(self):
+            self.trains['N'] = []
+            self.trains['S'] = []
+            self.routes = set()
+            self.has_data = False
+
+        def sort_trains(self, max_trains):
+            self.trains['S'] = sorted(self.trains['S'], key=itemgetter('time'))[:max_trains]
+            self.trains['N'] = sorted(self.trains['N'], key=itemgetter('time'))[:max_trains]
+
+        def serialize(self):
+            out = {
+                'N': self.trains['N'],
+                'S': self.trains['S'],
+                'routes': self.routes
+            }
+            out.update(self.json)
+            return out
+
+
     _FEED_URLS = [
         'http://datamine.mta.info/mta_esi.php?feed_id=1',
         'http://datamine.mta.info/mta_esi.php?feed_id=2',
@@ -39,6 +76,8 @@ class Mtapi(object):
         try:
             with open(stations_file, 'rb') as f:
                 self._stations = json.load(f)
+                for id in self._stations:
+                    self._stations[id] = self._Station(self._stations[id])
                 self._stops_to_stations = self._build_stops_index(self._stations)
 
         except IOError as e:
@@ -83,11 +122,8 @@ class Mtapi(object):
 
         # clear old times
         for id in stations:
-            stations[id]['N'] = []
-            stations[id]['S'] = []
-            stations[id]['routes'] = set()
+            stations[id].clear_train_data()
 
-        stops = self._build_stops_index(stations)
         routes = defaultdict(set)
 
         for i, feed_url in enumerate(self._FEED_URLS):
@@ -120,23 +156,14 @@ class Mtapi(object):
                         continue
 
                     station_id = self._stops_to_stations[stop_id]
-                    stations[station_id]['routes'].add(route_id)
-                    stations[station_id][direction].append({
-                        'route': route_id,
-                        'time': trip_stop.time
-                    })
+                    stations[station_id].add_train(route_id, direction, trip_stop.time)
 
                     routes[route_id].add(stop_id)
 
 
         # sort by time
         for id in stations:
-            if stations[id]['S'] or stations[id]['N']:
-                stations[id]['hasData'] = True
-                stations[id]['S'] = sorted(stations[id]['S'], key=itemgetter('time'))[:self._MAX_TRAINS]
-                stations[id]['N'] = sorted(stations[id]['N'], key=itemgetter('time'))[:self._MAX_TRAINS]
-            else:
-                stations[id]['hasData'] = False
+            stations[id].sort_trains(self._MAX_TRAINS)
 
         with self._read_lock:
             self._routes = routes
@@ -163,10 +190,9 @@ class Mtapi(object):
             self._update()
 
         with self._read_lock:
-            out = [ self._stations[self._stops_to_stations[k]] for k in self._routes[route] ]
+            out = [ self._stations[self._stops_to_stations[k]].serialize() for k in self._routes[route] ]
 
         out.sort(key=lambda x: x['name'])
-
         return out
 
     def get_by_id(self, ids):
@@ -174,7 +200,7 @@ class Mtapi(object):
             self._update()
 
         with self._read_lock:
-            out = [ self._stations[k] for k in ids ]
+            out = [ self._stations[k].serialize() for k in ids ]
 
         return out
 
