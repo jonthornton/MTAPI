@@ -5,7 +5,7 @@ import threading, time
 import csv, math, json
 import logging
 import google.protobuf.message
-from mtaproto.feedresponse import FeedResponse, Trip, TripStop
+from mtaproto.feedresponse import FeedResponse, Trip, TripStop, TZ
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,58 @@ def distance(p1, p2):
 
 class Mtapi(object):
 
-    _LOCK_TIMEOUT = 300
+    class _MtapiThreader(object):
+
+        LOCK_TIMEOUT = 300
+        update_lock = threading.Lock()
+        update_lock_time = datetime.datetime.now()
+
+        def __init__(self, mtapi, expires_seconds=60):
+            self.mtapi = mtapi
+            self.EXPIRES_SECONDS = expires_seconds
+
+        def start_timer(self):
+            '''Start a long-lived thread to loop infinitely and trigger updates at
+            some regular interval.'''
+
+            logger.info('Starting update thread...')
+            self.timer_thread = threading.Thread(target=self.update_timer)
+            self.timer_thread.daemon = True
+            self.timer_thread.start()
+
+        def update_timer(self):
+            '''This method runs in its own thread. Run feed updates in short-lived
+            threads.'''
+            while True:
+                time.sleep(self.EXPIRES_SECONDS)
+                self.update_thread = threading.Thread(target=self.locked_update)
+                self.update_thread.start()
+
+        def locked_update(self):
+            if not self.update_lock.acquire(False):
+                logger.info('Update locked!')
+
+                lock_age = datetime.datetime.now() - self.update_lock_time
+                if lock_age.total_seconds() < self.LOCK_TIMEOUT:
+                    return
+                else:
+                    self.update_lock = threading.Lock()
+                    logger.warn('Cleared expired update lock')
+
+            self.update_lock_time = datetime.datetime.now()
+
+            self.mtapi._update()
+
+            self.update_lock.release()
+
+        def restart_if_dead(self):
+            if not self.timer_thread.is_alive():
+                logger.warn('Timer died')
+                self.start_timer()
+                return True
+
+            return False
+
     _FEED_URLS = [
         'http://datamine.mta.info/mta_esi.php?feed_id=1',
         'http://datamine.mta.info/mta_esi.php?feed_id=2',
@@ -22,7 +73,7 @@ class Mtapi(object):
         'http://datamine.mta.info/mta_esi.php?feed_id=21'
     ]
 
-    def __init__(self, key, stations_file, expires_seconds=None, max_trains=10, max_minutes=30, threaded=False):
+    def __init__(self, key, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
         self._KEY = key
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
@@ -32,7 +83,6 @@ class Mtapi(object):
         self._stops_to_stations = {}
         self._routes = {}
         self._read_lock = threading.RLock()
-        self._update_lock = threading.Lock()
 
         self._init_feeds_key(key)
 
@@ -49,27 +99,11 @@ class Mtapi(object):
         self._update()
 
         if self._THREADED:
-            self._start_timer()
+            self.threader = self._MtapiThreader(self, expires_seconds)
+            self.threader.start_timer()
 
     def _init_feeds_key(self, key):
         self._FEED_URLS = list(map(lambda x: x + '&key=' + key, self._FEED_URLS))
-
-    def _start_timer(self):
-        '''Start a long-lived thread to loop infinitely and trigger updates at
-        some regular interval.'''
-
-        logger.info('Starting update thread...')
-        self._timer_thread = threading.Thread(target=self._update_timer)
-        self._timer_thread.daemon = True
-        self._timer_thread.start()
-
-    def _update_timer(self):
-        '''This method runs in its own thread. Run feed updates in short-lived
-        threads.'''
-        while True:
-            time.sleep(self._EXPIRES_SECONDS)
-            self._update_thread = threading.Thread(target=self._update)
-            self._update_thread.start()
 
     @staticmethod
     def _build_stops_index(stations):
@@ -92,18 +126,8 @@ class Mtapi(object):
             return False
 
     def _update(self):
-        if not self._update_lock.acquire(False):
-            logger.info('Update locked!')
-
-            lock_age = datetime.datetime.now() - self._update_lock_time
-            if lock_age.total_seconds() > self._LOCK_TIMEOUT:
-                self._update_lock = threading.Lock()
-                logger.info('Cleared expired update lock')
-
-            return
-
-        self._update_lock_time = datetime.datetime.now()
         logger.info('updating...')
+        self._last_update = datetime.datetime.now(TZ)
 
         # create working copy for thread safety
         stations = copy.deepcopy(self._stations)
@@ -123,7 +147,6 @@ class Mtapi(object):
             if not mta_data:
                 continue
 
-            self._last_update = mta_data.timestamp
             self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
             for entity in mta_data.entity:
@@ -171,8 +194,6 @@ class Mtapi(object):
             self._routes = routes
             self._stations = stations
 
-        self._update_lock.release()
-
     def last_update(self):
         return self._last_update
 
@@ -210,14 +231,10 @@ class Mtapi(object):
         return out
 
     def is_expired(self):
-        if self._THREADED:
-            # check that the update thread is still running
-            if not self._timer_thread.is_alive():
-                self._start_timer()
-                return False
-
+        if self.threader and self.threader.restart_if_dead():
+            return False
         elif self._EXPIRES_SECONDS:
-            age = datetime.datetime.now(self._tz) - self._last_update
+            age = datetime.datetime.now(TZ) - self._last_update
             return age.total_seconds() > self._EXPIRES_SECONDS
         else:
             return False

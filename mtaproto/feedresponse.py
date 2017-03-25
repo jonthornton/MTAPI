@@ -2,7 +2,7 @@ from mtaproto import nyct_subway_pb2
 from pytz import timezone
 import datetime
 
-_TZ = timezone('US/Eastern')
+TZ = timezone('US/Eastern')
 
 class FeedResponse(object):
 
@@ -13,7 +13,7 @@ class FeedResponse(object):
     def __getattr__(self, name):
 
         if name == 'timestamp':
-            return datetime.datetime.fromtimestamp(self._pb_data.header.timestamp, _TZ)
+            return datetime.datetime.fromtimestamp(self._pb_data.header.timestamp, TZ)
 
 
         return getattr(self._pb_data, name)
@@ -52,7 +52,7 @@ class TripStop(object):
 
         if name == 'time':
             raw_time = self._pb_data.arrival.time or self._pb_data.departure.time
-            return datetime.datetime.fromtimestamp(raw_time, _TZ)
+            return datetime.datetime.fromtimestamp(raw_time, TZ)
         elif name == 'stop_id':
             return str(self._pb_data.stop_id[:3])
 
