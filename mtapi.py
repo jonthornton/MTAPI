@@ -147,7 +147,7 @@ class Mtapi(object):
             if not mta_data:
                 continue
 
-            self._MAX_TIME = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
+            max_time = self._last_update + datetime.timedelta(minutes = self._MAX_MINUTES)
 
             for entity in mta_data.entity:
                 trip = Trip(entity)
@@ -162,7 +162,7 @@ class Mtapi(object):
                     trip_stop = TripStop(update)
 
                     time = trip_stop.time
-                    if time < self._last_update or time > self._MAX_TIME:
+                    if time < self._last_update or time > max_time:
                         continue
 
                     stop_id = trip_stop.stop_id
