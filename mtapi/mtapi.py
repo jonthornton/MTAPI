@@ -69,7 +69,7 @@ class Mtapi(object):
         self._routes = {}
         self._read_lock = threading.RLock()
 
-        self._init_feeds_key(key)
+        self._FEED_URLS = self._init_feeds_key(key, self._FEED_URLS)
 
         # initialize the stations database
         try:
@@ -89,8 +89,8 @@ class Mtapi(object):
             self.threader = _MtapiThreader(self, expires_seconds)
             self.threader.start_timer()
 
-    def _init_feeds_key(self, key):
-        self._FEED_URLS = list(map(lambda x: x + '&key=' + key, self._FEED_URLS))
+    def _init_feeds_key(key, urls):
+        return list(map(lambda x: x + '&key=' + key, urls))
 
     @staticmethod
     def _build_stops_index(stations):
