@@ -48,7 +48,8 @@ class Mtapi(object):
                 'N': self.trains['N'],
                 'S': self.trains['S'],
                 'routes': self.routes,
-                'last_update': self.last_update
+                'last_update': self.last_update,
+                'hasData': self.has_data
             }
             out.update(self.json)
             return out
