@@ -16,6 +16,8 @@ def distance(p1, p2):
 class Mtapi(object):
 
     class _Station(object):
+        last_update = None
+
         def __init__(self, json):
             self.json = json
             self.trains = {}
@@ -31,13 +33,12 @@ class Mtapi(object):
                 'time': train_time
             })
             self.last_update = feed_time
-            self.has_data = True
 
         def clear_train_data(self):
             self.trains['N'] = []
             self.trains['S'] = []
             self.routes = set()
-            self.has_data = False
+            self.last_update = None
 
         def sort_trains(self, max_trains):
             self.trains['S'] = sorted(self.trains['S'], key=itemgetter('time'))[:max_trains]
@@ -48,8 +49,7 @@ class Mtapi(object):
                 'N': self.trains['N'],
                 'S': self.trains['S'],
                 'routes': self.routes,
-                'last_update': self.last_update,
-                'hasData': self.has_data
+                'last_update': self.last_update
             }
             out.update(self.json)
             return out
@@ -183,9 +183,10 @@ class Mtapi(object):
             self._update()
 
         with self._read_lock:
-            sortable_stations = copy.deepcopy(self._stations)
+            sortable_stations = copy.deepcopy(self._stations).values()
 
         sortable_stations.sort(key=lambda x: distance(x['location'], point))
+        sortable_stations = map(lambda x: x.serialize(), sortable_stations)
         return sortable_stations[:limit]
 
     def get_routes(self):
