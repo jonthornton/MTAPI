@@ -129,7 +129,7 @@ def routes():
         })
 
 def _make_envelope(data):
-    reduce_func = lambda a,b: a if a['last_update'] > b['last_update'] else b
+    reduce_func = lambda a,b: a if a['last_update'] < b['last_update'] else b
     time = reduce(reduce_func, data)['last_update']
 
     return jsonify({
