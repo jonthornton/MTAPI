@@ -64,7 +64,6 @@ class Mtapi(object):
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
         self._EXPIRES_SECONDS = expires_seconds
-        self._THREADED = threaded
         self._stations = {}
         self._stops_to_stations = {}
         self._routes = {}
@@ -86,7 +85,7 @@ class Mtapi(object):
 
         self._update()
 
-        if self._THREADED:
+        if threaded:
             self.threader = _MtapiThreader(self, expires_seconds)
             self.threader.start_timer()
 
