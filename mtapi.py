@@ -161,8 +161,7 @@ class Mtapi(object):
                 for update in entity.trip_update.stop_time_update:
                     trip_stop = TripStop(update)
 
-                    time = trip_stop.time
-                    if time < self._last_update or time > max_time:
+                    if trip_stop.time < self._last_update or trip_stop.time > max_time:
                         continue
 
                     stop_id = trip_stop.stop_id
@@ -175,7 +174,7 @@ class Mtapi(object):
                     stations[station_id]['routes'].add(route_id)
                     stations[station_id][direction].append({
                         'route': route_id,
-                        'time': time
+                        'time': trip_stop.time
                     })
 
                     routes[route_id].add(stop_id)
