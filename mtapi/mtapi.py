@@ -67,6 +67,7 @@ class Mtapi(object):
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
         self._EXPIRES_SECONDS = expires_seconds
+        self._THREADED = threaded
         self._stations = {}
         self._stops_to_stations = {}
         self._routes = {}
@@ -212,7 +213,7 @@ class Mtapi(object):
         return out
 
     def is_expired(self):
-        if self.threader and self.threader.restart_if_dead():
+        if self._THREADED and self.threader and self.threader.restart_if_dead():
             return False
         elif self._EXPIRES_SECONDS:
             age = datetime.datetime.now(TZ) - self._last_update
