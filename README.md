@@ -288,7 +288,7 @@ Usage:
 ```
 $ python make_stations_csv.py stops.txt transfers.txt > stations.csv
 # edit groupings in stations.csv
-$ python make_stations_.py stations.csv > stations.json
+$ python make_stations_json.py stations.csv > stations.json
 # edit names in stations.json
 ```
 
