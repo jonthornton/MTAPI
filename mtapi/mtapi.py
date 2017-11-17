@@ -1,4 +1,12 @@
-import urllib2, contextlib, datetime, copy
+try:
+    # For Python 3.0 and later
+    from urllib.request import urlopen
+    from urllib.error import URLError
+except ImportError:
+    # Fall back to Python 2's urllib2
+    from urllib2 import urlopen
+    from urllib2 import URLError
+import contextlib, datetime, copy
 from collections import defaultdict
 from operator import itemgetter
 import csv, math, json
@@ -111,11 +119,11 @@ class Mtapi(object):
     @staticmethod
     def _load_mta_feed(feed_url):
         try:
-            with contextlib.closing(urllib2.urlopen(feed_url)) as r:
+            with contextlib.closing(urlopen(feed_url)) as r:
                 data = r.read()
                 return FeedResponse(data)
 
-        except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
+        except (URLError, google.protobuf.message.DecodeError) as e:
             logger.error('Couldn\'t connect to MTA server: ' + str(e))
             return False
 
