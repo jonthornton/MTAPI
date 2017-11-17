@@ -1,1 +1,2 @@
-from mtapi import Mtapi
+from __future__ import print_function, division, absolute_import
+from .mtapi import Mtapi
