@@ -9,6 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
+from __future__ import print_function, division, absolute_import
 from mtapi import Mtapi
 from flask import Flask, request, jsonify, render_template, abort
 from flask.json import JSONEncoder
@@ -89,7 +90,7 @@ def by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
     except KeyError as e:
-        print e
+        print(e)
         response = jsonify({
             'error': 'Missing lat/lon parameter'
             })

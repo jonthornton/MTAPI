@@ -86,7 +86,7 @@ class Mtapi(object):
                 self._stops_to_stations = self._build_stops_index(self._stations)
 
         except IOError as e:
-            print 'Couldn\'t load stations file '+stations_file
+            print("Couldn't load stations file " + stations_file)
             exit()
 
         self._update()
