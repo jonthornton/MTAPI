@@ -56,12 +56,14 @@ class Mtapi(object):
 
 
     _FEED_URLS = [
-        'http://datamine.mta.info/mta_esi.php?feed_id=1',
-        'http://datamine.mta.info/mta_esi.php?feed_id=2',
-        'http://datamine.mta.info/mta_esi.php?feed_id=16',
-        'http://datamine.mta.info/mta_esi.php?feed_id=21',
-        'http://datamine.mta.info/mta_esi.php?feed_id=26',
-        'http://datamine.mta.info/mta_esi.php?feed_id=31'
+        'http://datamine.mta.info/mta_esi.php?feed_id=1',  # 123456S
+        'http://datamine.mta.info/mta_esi.php?feed_id=2',  # L
+        'http://datamine.mta.info/mta_esi.php?feed_id=16', # NRQW
+        'http://datamine.mta.info/mta_esi.php?feed_id=21', # BDFM
+        'http://datamine.mta.info/mta_esi.php?feed_id=26', # ACE
+        'http://datamine.mta.info/mta_esi.php?feed_id=51', # 7
+        'http://datamine.mta.info/mta_esi.php?feed_id=36', # JZ
+        'http://datamine.mta.info/mta_esi.php?feed_id=31'  # G
     ]
 
     def __init__(self, key, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
