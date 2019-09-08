@@ -56,14 +56,14 @@ class Mtapi(object):
 
 
     _FEED_URLS = [
-        'http://datamine.mta.info/mta_esi.php?feed_id=1',  # 123456S
-        'http://datamine.mta.info/mta_esi.php?feed_id=2',  # L
-        'http://datamine.mta.info/mta_esi.php?feed_id=16', # NRQW
-        'http://datamine.mta.info/mta_esi.php?feed_id=21', # BDFM
-        'http://datamine.mta.info/mta_esi.php?feed_id=26', # ACE
-        'http://datamine.mta.info/mta_esi.php?feed_id=51', # 7
-        'http://datamine.mta.info/mta_esi.php?feed_id=36', # JZ
-        'http://datamine.mta.info/mta_esi.php?feed_id=31'  # G
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',  # 123456S
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l',  # L
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw', # NRQW
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm', # BDFM
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace', # ACE
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-7', # 7
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz', # JZ
+        'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g'  # G
     ]
 
     def __init__(self, key, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
@@ -76,8 +76,6 @@ class Mtapi(object):
         self._stops_to_stations = {}
         self._routes = {}
         self._read_lock = threading.RLock()
-
-        self._FEED_URLS = self._init_feeds_key(key, self._FEED_URLS)
 
         # initialize the stations database
         try:
@@ -98,10 +96,6 @@ class Mtapi(object):
             self.threader.start_timer()
 
     @staticmethod
-    def _init_feeds_key(key, urls):
-        return list(map(lambda x: x + '&key=' + key, urls))
-
-    @staticmethod
     def _build_stops_index(stations):
         stops = {}
         for station_id in stations:
@@ -110,10 +104,11 @@ class Mtapi(object):
 
         return stops
 
-    @staticmethod
-    def _load_mta_feed(feed_url):
+    def _load_mta_feed(self, feed_url):
         try:
-            with contextlib.closing(urllib2.urlopen(feed_url)) as r:
+            request = urllib2.Request(feed_url)
+            request.add_header('x-api-key', self._KEY)
+            with contextlib.closing(urllib2.urlopen(request)) as r:
                 data = r.read()
                 return FeedResponse(data)
 
