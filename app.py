@@ -10,7 +10,7 @@
 """
 
 from mtapi.mtapi import Mtapi
-from flask import Flask, request, jsonify, render_template, abort
+from flask import Flask, request, jsonify, render_template, abort, redirect
 from flask.json import JSONEncoder
 from datetime import datetime
 from functools import wraps, reduce
@@ -102,6 +102,10 @@ def by_location():
 @app.route('/by-route/<route>', methods=['GET'])
 @cross_origin
 def by_route(route):
+
+    if route.islower():
+        return redirect(request.host_url + 'by-route/' + route.upper(), code=301)
+
     try:
         data = mta.get_by_route(route)
         return _make_envelope(data)

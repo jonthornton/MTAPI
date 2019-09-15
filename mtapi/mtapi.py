@@ -144,7 +144,7 @@ class Mtapi(object):
                     continue
 
                 direction = trip.direction[0]
-                route_id = trip.route_id
+                route_id = trip.route_id.upper()
 
                 for update in entity.trip_update.stop_time_update:
                     trip_stop = TripStop(update)
@@ -193,6 +193,8 @@ class Mtapi(object):
         return self._routes.keys()
 
     def get_by_route(self, route):
+        route = route.upper()
+
         if self.is_expired():
             self._update()
 
