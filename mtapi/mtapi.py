@@ -1,4 +1,4 @@
-import urllib2, contextlib, datetime, copy
+import urllib, contextlib, datetime, copy
 from collections import defaultdict
 from operator import itemgetter
 import csv, math, json
@@ -6,7 +6,7 @@ import threading
 import logging
 import google.protobuf.message
 from mtaproto.feedresponse import FeedResponse, Trip, TripStop, TZ
-from _mtapithreader import _MtapiThreader
+from mtapi._mtapithreader import _MtapiThreader
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class Mtapi(object):
                 self._stops_to_stations = self._build_stops_index(self._stations)
 
         except IOError as e:
-            print 'Couldn\'t load stations file '+stations_file
+            print('Couldn\'t load stations file '+stations_file)
             exit()
 
         self._update()
@@ -106,13 +106,13 @@ class Mtapi(object):
 
     def _load_mta_feed(self, feed_url):
         try:
-            request = urllib2.Request(feed_url)
+            request = urllib.request.Request(feed_url)
             request.add_header('x-api-key', self._KEY)
-            with contextlib.closing(urllib2.urlopen(request)) as r:
+            with contextlib.closing(urllib.request.urlopen(request)) as r:
                 data = r.read()
                 return FeedResponse(data)
 
-        except (urllib2.URLError, google.protobuf.message.DecodeError) as e:
+        except (urllib.error.URLError, google.protobuf.message.DecodeError) as e:
             logger.error('Couldn\'t connect to MTA server: ' + str(e))
             return False
 

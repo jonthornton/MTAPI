@@ -232,13 +232,13 @@ Lists available routes.
 
 ## Running the server
 
-MTAPI is a Flask app designed to run under Python 2.7.
+MTAPI is a Flask app designed to run under Python 3.3+.
 
 1. Create a `settings.cfg` file. A sample is provided as `settings.cfg.sample`.
 2. Set up your environment and install dependencies.  
-`$ virtualenv .venv`  
+`$ python3 -m venv .venv`  
 `$ source .venv/bin/activate`  
-`$ pip install -r requirements.txt`
+`$ python3 -m pip install -r requirements.txt`
 3. Run the server  
 `$ python app.py`
 
