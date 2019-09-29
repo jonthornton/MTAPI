@@ -1,5 +1,6 @@
 import urllib, contextlib, datetime, copy
 from collections import defaultdict
+from itertools import islice
 from operator import itemgetter
 import csv, math, json
 import threading
@@ -185,9 +186,10 @@ class Mtapi(object):
         with self._read_lock:
             sortable_stations = copy.deepcopy(self._stations).values()
 
-        sortable_stations.sort(key=lambda x: distance(x['location'], point))
-        sortable_stations = map(lambda x: x.serialize(), sortable_stations)
-        return sortable_stations[:limit]
+        sorted_stations = sorted(sortable_stations, key=lambda s: distance(s['location'], point))
+        serialized_stations = map(lambda s: s.serialize(), sorted_stations)
+
+        return list(islice(serialized_stations, limit))
 
     def get_routes(self):
         return self._routes.keys()
