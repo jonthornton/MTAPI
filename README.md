@@ -1,6 +1,6 @@
 # MTA Realtime API JSON Proxy
 
-MTAPI is a small HTTP server that converts the [MTA's realtime subway feed](http://datamine.mta.info/feed-documentation) from [Protocol Buffers/GTFS](https://developers.google.com/transit/gtfs/) to JSON. The app also adds caching and makes it possible to retrieve information by location and train line. 
+MTAPI is a small HTTP server that converts the [MTA's realtime subway feed](https://api.mta.info/#/landing) from [Protocol Buffers/GTFS](https://developers.google.com/transit/gtfs/) to JSON. The app also adds caching and makes it possible to retrieve information by location and train line. 
 
 ## Active Development
 
@@ -249,7 +249,7 @@ This app makes use of Python threads. If running under uWSGI include the --enabl
 ## Settings
 
 - **MTA_KEY** (required)  
-The API key provided at http://datamine.mta.info/user/register  
+The API key provided at hhttps://api.mta.info/#/signup
 *default: None*
 
 - **STATIONS_FILE** (required)  
