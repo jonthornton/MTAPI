@@ -7,7 +7,7 @@ Flask==1.1.1
 funcsigs==1.0.2
 importlib-metadata==0.22
 itsdangerous==1.1.0
-Jinja2==2.10.1
+Jinja2==2.11.3
 MarkupSafe==0.23
 more-itertools==5.0.0
 packaging==19.1
