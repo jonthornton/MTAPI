@@ -14,7 +14,7 @@ packaging==19.1
 pathlib2==2.3.4
 pluggy==0.13.0
 protobuf==3.9.1
-py==1.8.0
+py==1.10.0
 pyparsing==2.4.2
 pytest==5.1.2
 pytz==2019.2
