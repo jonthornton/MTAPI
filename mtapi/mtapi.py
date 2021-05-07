@@ -113,7 +113,7 @@ class Mtapi(object):
                 data = r.read()
                 return FeedResponse(data)
 
-        except (urllib.error.URLError, google.protobuf.message.DecodeError) as e:
+        except (urllib.error.URLError, google.protobuf.message.DecodeError, ConnectionResetError) as e:
             logger.error('Couldn\'t connect to MTA server: ' + str(e))
             return False
 
