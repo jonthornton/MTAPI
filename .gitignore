@@ -7,3 +7,4 @@ transfers.txt
 *.pyc
 .cache
 .DS_Store
+.idea/*
