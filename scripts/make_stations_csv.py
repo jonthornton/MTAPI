@@ -15,7 +15,7 @@ def main():
     transfers = {}
 
     # load stops into a dict
-    with open(args.stops_file, 'rb') as f:
+    with open(args.stops_file, 'rt') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['parent_station']:
@@ -28,7 +28,7 @@ def main():
                 }
 
     # load transfer groups into a dict. duplicates will be filtered out later
-    with open(args.transfers_file, 'rb') as f:
+    with open(args.transfers_file, 'rt') as f:
         reader = csv.DictReader(f)
         for row in reader:
             if row['from_stop_id'] == row['to_stop_id']:

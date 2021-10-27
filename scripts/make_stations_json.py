@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
 
     stations = {}
-    with open(args.stations_file, 'rb') as f:
+    with open(args.stations_file, 'rt') as f:
         reader = csv.DictReader(f)
         for row in reader:
 
@@ -33,11 +33,7 @@ def main():
             sum(v[0] for v in station['stops'].values()) / float(len(station['stops'])),
             sum(v[1] for v in station['stops'].values()) / float(len(station['stops']))
         ]
-        station['id'] = md5(''.join(station['stops'].keys())).hexdigest()[:ID_LENGTH]
-
-        while station['id'] in keyed_stations:
-            # keep hashing til we get a unique ID
-            station['id'] = md5(station['id']).hexdigest()[:ID_LENGTH]
+        station['id'] = ''.join(station['stops'].keys())[:ID_LENGTH]
 
         keyed_stations[station['id']] = station
 
