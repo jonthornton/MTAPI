@@ -1,4 +1,5 @@
 from mtaproto import nyct_subway_pb2
+from mtaproto import gtfs_realtime_pb2
 from pytz import timezone
 import datetime
 
@@ -44,6 +45,31 @@ class Trip(object):
         return bool(self._pb_data.trip_update)
 
 
+class BusTrip(object):
+    def __init__(self, pb_data):
+        self._pb_data = pb_data
+
+    def __getattr__(self, name):
+
+        if name == 'direction':
+            return self._direction()
+        elif name == 'route_id':
+            if self._pb_data.trip_update.trip.route_id == 'GS':
+                return 'S'
+            else:
+                return self._pb_data.trip_update.trip.route_id
+
+        return getattr(self._pb_data, name)
+
+    def _direction(self):
+        if self._pb_data.trip_update.trip.direction_id == 0:
+            return '0'
+        else:
+            return '1'
+
+    def is_valid(self):
+        return bool(self._pb_data.trip_update)
+
 class TripStop(object):
     def __init__(self, pb_data):
         self._pb_data = pb_data
@@ -55,5 +81,20 @@ class TripStop(object):
             return datetime.datetime.fromtimestamp(raw_time, TZ)
         elif name == 'stop_id':
             return str(self._pb_data.stop_id[:3])
+
+        return getattr(self._pb_data, name)
+
+
+class BusTripStop(object):
+    def __init__(self, pb_data):
+        self._pb_data = pb_data
+
+    def __getattr__(self, name):
+
+        if name == 'time':
+            raw_time = self._pb_data.arrival.time or self._pb_data.departure.time
+            return datetime.datetime.fromtimestamp(raw_time, TZ)
+        elif name == 'stop_id':
+            return str(self._pb_data.stop_id[:7])
 
         return getattr(self._pb_data, name)
