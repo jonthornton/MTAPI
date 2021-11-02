@@ -1,4 +1,4 @@
-# Given GTFS stops.txt and transfers.txt, creates a stations.csv file of station groupings based on stations connected in transfers.txt.
+# Given GTFS stops_brooklyn.txt and transfers.txt, creates a stations.csv file of station groupings based on stations connected in transfers.txt.
 # The stations.csv file can be edited to relabel and reorganize the groupings (groupings of more than one station appear at the top of the file).
 # The edited stations.csv can be converted to a stations.json by make_stations_json.py.
 # Assumes that transfers.txt only refers to GTFS "stations" (location_type 1) and that transfers.txt has transitive closure.
@@ -7,7 +7,7 @@ import argparse, csv, json, sys
 
 def main():
     parser = argparse.ArgumentParser(description='Generate stations CSV file for use with make_stations_json.py')
-    parser.add_argument('stops_file', default='stops.txt')
+    parser.add_argument('stops_file', default='stops_brooklyn.txt')
     parser.add_argument('transfers_file', default='transfers.txt')
     args = parser.parse_args()
 

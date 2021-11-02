@@ -56,6 +56,7 @@ app.json_encoder = CustomJSONEncoder
 mta = Mtapi(
     app.config['MTA_KEY'],
     app.config['STATIONS_FILE'],
+    app.config['BUS_STATIONS_FILE'],
     max_trains=app.config['MAX_TRAINS'],
     max_minutes=app.config['MAX_MINUTES'],
     expires_seconds=app.config['CACHE_SECONDS'],
@@ -99,6 +100,22 @@ def by_location():
     data = mta.get_by_point(location, 5)
     return _make_envelope(data)
 
+@app.route('/bus/by-location', methods=['GET'])
+@cross_origin
+def bus_by_location():
+    try:
+        location = (float(request.args['lat']), float(request.args['lon']))
+    except KeyError as e:
+        print(e)
+        response = jsonify({
+            'error': 'Missing lat/lon parameter'
+            })
+        response.status_code = 400
+        return response
+
+    data = mta.bus_get_by_point(location, 5)
+    return _make_envelope(data)
+
 @app.route('/by-route/<route>', methods=['GET'])
 @cross_origin
 def by_route(route):
@@ -108,6 +125,20 @@ def by_route(route):
 
     try:
         data = mta.get_by_route(route)
+        return _make_envelope(data)
+    except KeyError as e:
+        abort(404)
+
+
+@app.route('/bus/by-route/<route>', methods=['GET'])
+@cross_origin
+def bus_by_route(route):
+
+    if route.islower():
+        return redirect(request.host_url + 'by-route/' + route.upper(), code=301)
+
+    try:
+        data = mta.bus_get_by_route(route)
         return _make_envelope(data)
     except KeyError as e:
         abort(404)
@@ -122,12 +153,30 @@ def by_index(id_string):
     except KeyError as e:
         abort(404)
 
+@app.route('/bus/by-id/<id_string>', methods=['GET'])
+@cross_origin
+def bus_by_index(id_string):
+    ids = id_string.split(',')
+    try:
+        data = mta.bus_get_by_id(ids)
+        return _make_envelope(data)
+    except KeyError as e:
+        abort(404)
+
 @app.route('/routes', methods=['GET'])
 @cross_origin
 def routes():
     return jsonify({
         'data': sorted(mta.get_routes()),
         'updated': mta.last_update()
+        })
+
+@app.route('/bus/routes', methods=['GET'])
+@cross_origin
+def bus_routes():
+    return jsonify({
+        'data': sorted(mta.bus_get_routes()),
+        'updated': mta.bus_last_update()
         })
 
 def _envelope_reduce(a, b):
