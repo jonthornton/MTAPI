@@ -44,6 +44,7 @@ class _MtapiThreader(object):
         self.update_lock_time = datetime.datetime.now()
 
         self.mtapi._update()
+        self.mtapi._bus_update()
 
         self.update_lock.release()
 
