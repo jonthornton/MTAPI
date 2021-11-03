@@ -89,15 +89,16 @@ def index():
 def by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
+        num_stations = int(request.args['num'])
     except KeyError as e:
         print(e)
         response = jsonify({
-            'error': 'Missing lat/lon parameter'
+            'error': 'Missing lat/lon/num parameter'
             })
         response.status_code = 400
         return response
 
-    data = mta.get_by_point(location, 5)
+    data = mta.get_by_point(location, num_stations)
     return _make_envelope(data)
 
 @app.route('/bus/by-location', methods=['GET'])
@@ -105,15 +106,16 @@ def by_location():
 def bus_by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
+        num_stations = int(request.args['num'])
     except KeyError as e:
         print(e)
         response = jsonify({
-            'error': 'Missing lat/lon parameter'
+            'error': 'Missing lat/lon/num parameter'
             })
         response.status_code = 400
         return response
 
-    data = mta.bus_get_by_point(location, 5)
+    data = mta.bus_get_by_point(location, num_stations)
     return _make_envelope(data)
 
 @app.route('/by-route/<route>', methods=['GET'])

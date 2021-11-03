@@ -1,6 +1,6 @@
 .venv
 *.sublime-*
-settings.cfg
+#settings.cfg
 stops.txt
 transfers.txt
 *.log
