@@ -12,12 +12,14 @@
 from mtapi.mtapi import Mtapi
 from flask import Flask, request, jsonify, render_template, abort, redirect
 from flask.json import JSONEncoder
+from flask_cors import CORS
 from datetime import datetime
 from functools import wraps, reduce
 import logging
 import os
 
 app = Flask(__name__)
+CORS(app)
 app.config.update(
     MAX_TRAINS=10,
     MAX_MINUTES=30,
@@ -84,7 +86,7 @@ def index():
         'readme': 'Visit https://github.com/jonthornton/MTAPI for more info'
         })
 
-@app.route('/by-location', methods=['GET'])
+@app.route('/by-location', methods=['GET', 'POST'])
 @cross_origin
 def by_location():
     try:
@@ -100,7 +102,7 @@ def by_location():
     data = mta.get_by_point(location, 5)
     return _make_envelope(data)
 
-@app.route('/bus/by-location', methods=['GET'])
+@app.route('/bus/by-location', methods=['GET', 'POST'])
 @cross_origin
 def bus_by_location():
     try:
@@ -116,7 +118,7 @@ def bus_by_location():
     data = mta.bus_get_by_point(location, 5)
     return _make_envelope(data)
 
-@app.route('/by-route/<route>', methods=['GET'])
+@app.route('/by-route/<route>', methods=['GET', 'POST'])
 @cross_origin
 def by_route(route):
 
@@ -130,7 +132,7 @@ def by_route(route):
         abort(404)
 
 
-@app.route('/bus/by-route/<route>', methods=['GET'])
+@app.route('/bus/by-route/<route>', methods=['GET', 'POST'])
 @cross_origin
 def bus_by_route(route):
 
@@ -143,7 +145,7 @@ def bus_by_route(route):
     except KeyError as e:
         abort(404)
 
-@app.route('/by-id/<id_string>', methods=['GET'])
+@app.route('/by-id/<id_string>', methods=['GET', 'POST'])
 @cross_origin
 def by_index(id_string):
     ids = id_string.split(',')
@@ -153,7 +155,7 @@ def by_index(id_string):
     except KeyError as e:
         abort(404)
 
-@app.route('/bus/by-id/<id_string>', methods=['GET'])
+@app.route('/bus/by-id/<id_string>', methods=['GET', 'POST'])
 @cross_origin
 def bus_by_index(id_string):
     ids = id_string.split(',')
@@ -163,7 +165,7 @@ def bus_by_index(id_string):
     except KeyError as e:
         abort(404)
 
-@app.route('/routes', methods=['GET'])
+@app.route('/routes', methods=['GET', 'POST'])
 @cross_origin
 def routes():
     return jsonify({
@@ -171,7 +173,7 @@ def routes():
         'updated': mta.last_update()
         })
 
-@app.route('/bus/routes', methods=['GET'])
+@app.route('/bus/routes', methods=['GET', 'POST'])
 @cross_origin
 def bus_routes():
     return jsonify({
