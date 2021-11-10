@@ -16,7 +16,7 @@ export class TrainEffects {
       ofType(trainActions.TRAIN_BY_LOCATION),
       switchMap(action => {
         return this.trainService.byLocation((action as any).request.lat,
-          (action as any).request.lon
+          (action as any).request.lon, (action as any).request.num
           ).pipe(
             map(byLocationResult => trainActions.TrainByLocationSuccess({data: byLocationResult})),
             catchError(byLocationError => of(trainActions.TrainByLocationFail({error: byLocationError.error})))

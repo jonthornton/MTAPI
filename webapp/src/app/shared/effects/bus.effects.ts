@@ -16,7 +16,7 @@ export class BusEffects {
       ofType(busActions.BUS_BY_LOCATION),
       switchMap(action => {
         return this.busService.byLocation((action as any).request.lat,
-          (action as any).request.lon
+          (action as any).request.lon, (action as any).request.num
         ).pipe(
           map(byLocationResult => busActions.BusByLocationSuccess({data: byLocationResult})),
           catchError(byLocationError => of(busActions.BusByLocationFail({error: byLocationError.error})))

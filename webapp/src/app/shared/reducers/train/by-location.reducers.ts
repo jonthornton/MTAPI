@@ -4,6 +4,7 @@ import {Action, createReducer, on} from "@ngrx/store";
 export interface State {
   lat: number,
   lon: number,
+  num: number,
   data: any,
   error: any
 }
@@ -11,6 +12,7 @@ export interface State {
 export const initialState: State = {
   lat: 0,
   lon: 0,
+  num: 0,
   data: {},
   error: ""
 }
@@ -20,7 +22,8 @@ const trainByLocationReducer = createReducer(
   on(trainActions.TrainByLocation, (state, {request}) => ({
     ...state,
     lat: request.lat,
-    lon: request.lon
+    lon: request.lon,
+    num: request.num
   })),
   on(trainActions.TrainByLocationSuccess, (state, {data}) => ({
     ...state,

@@ -13,13 +13,14 @@ export class AsyncBusService {
 
   constructor(private http: HttpClient) { }
 
-  byLocation(latitude: number, longitude: number): Observable<any> {
+  byLocation(latitude: number, longitude: number, num: number): Observable<any> {
     let apiUrl = BusRestAPIUrl + "/by-location";
     let headers = new HttpHeaders();
     let params = new HttpParams();
 
     params.set("lat", latitude);
     params.set("lon", longitude);
+    params.set("num", num);
 
     return this.executeRequest(apiUrl, headers, params);
   }

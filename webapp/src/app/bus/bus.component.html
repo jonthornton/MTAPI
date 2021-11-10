@@ -1,1 +1,42 @@
-<p>bus works!</p>
+<div class="bus-dash">
+    <google-map [center]="center">
+        <map-transit-layer></map-transit-layer>
+        <map-marker *ngFor="let markerPosition of markerPositions"
+                    [position]="markerPosition"
+                    [options]="markerOptions"></map-marker>
+    </google-map>
+    <div>
+        <mat-form-field appearance="fill">
+            <mat-label>Route</mat-label>
+            <mat-select (selectionChange)="selectRoute($event)">
+                <mat-option *ngFor="let route of routesData" [value]="route">
+                    {{route}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="fill" *ngIf="selectedRoute">
+            <mat-label>Station</mat-label>
+            <mat-select (selectionChange)="selectStation($event)">
+                <mat-option *ngFor="let station of routeStationsData" [value]="station">
+                    {{station.name}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <div *ngIf="selectedStation">
+            <div *ngFor="let station of idStationData">
+                <span>0 Bound Buses</span>
+
+                <p *ngFor="let time of station['0']">
+                    {{time.time | date:'shortTime'}}
+                </p>
+            </div>
+            <div *ngFor="let station of idStationData">
+                <span>1 Bound Buses</span>
+
+                <p *ngFor="let time of station['1']">
+                    {{time.time | date:'shortTime'}}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

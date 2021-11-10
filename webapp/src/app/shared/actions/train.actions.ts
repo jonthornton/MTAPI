@@ -18,7 +18,8 @@ export const TRAIN_ROUTES_FAIL =            '[ROUTES] Routes Train Fail';
 
 export interface TrainByLocationRequest {
   lat: number,
-  lon: number
+  lon: number,
+  num: number
 }
 
 export interface TrainByRouteRequest {

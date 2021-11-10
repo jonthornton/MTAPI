@@ -18,7 +18,8 @@ export const BUS_ROUTES_FAIL =            '[ROUTES] Routes Bus Fail';
 
 export interface BusByLocationRequest {
   lat: number,
-  lon: number
+  lon: number,
+  num: number
 }
 
 export interface BusByRouteRequest {

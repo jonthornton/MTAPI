@@ -1,4 +1,4 @@
-import * as trainActions from '../../actions/train.actions';
+import * as busActions from '../../actions/bus.actions';
 import {Action, createReducer, on} from "@ngrx/store";
 
 export interface State {
@@ -13,22 +13,22 @@ export const initialState: State = {
   error: ""
 }
 
-const trainByIdReducer = createReducer(
+const busByIdReducer = createReducer(
   initialState,
-  on(trainActions.TrainById, (state, {request}) => ({
+  on(busActions.BusById, (state, {request}) => ({
     ...state,
     ids: request.ids
   })),
-  on(trainActions.TrainByIdSuccess, (state, {data}) => ({
+  on(busActions.BusByIdSuccess, (state, {data}) => ({
     ...state,
     data: data
   })),
-  on(trainActions.TrainByIdFail, (state, {error}) => ({
+  on(busActions.BusByIdFail, (state, {error}) => ({
     ...state,
     error: error
   }))
 )
 
 export function reducer(state: State | undefined, action: Action) {
-  return trainByIdReducer(state, action)
+  return busByIdReducer(state, action)
 }

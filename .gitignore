@@ -21,6 +21,7 @@ stops/
 
 # dependencies
 /webapp/node_modules
+/webapp/.angular/
 
 # profiling files
 chrome-profiler-events*.json
