@@ -1,0 +1,4 @@
+.bus-dash {
+    display: flex;
+    justify-content: space-evenly;
+}
