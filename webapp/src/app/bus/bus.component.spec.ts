@@ -10,7 +10,7 @@ describe('BusComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [ BusComponent ]
     })
-    .compileComponents();
+        .compileComponents();
   });
 
   beforeEach(() => {

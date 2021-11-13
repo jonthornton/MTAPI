@@ -17,17 +17,17 @@ export const BUS_ROUTES_SUCCESS =         '[ROUTES] Routes Bus Success';
 export const BUS_ROUTES_FAIL =            '[ROUTES] Routes Bus Fail';
 
 export interface BusByLocationRequest {
-  lat: number,
-  lon: number,
-  num: number
+    lat: number,
+    lon: number,
+    num: number
 }
 
 export interface BusByRouteRequest {
-  route: string
+    route: string
 }
 
 export interface BusByIdRequest {
-  ids: any[]
+    ids: any[]
 }
 
 /*
@@ -39,85 +39,85 @@ export interface BusByIdRequest {
 
 // by-location Actions
 export const BusByLocation = createAction(
-  BUS_BY_LOCATION,
-  props<{
-    request: BusByLocationRequest
-  }>()
+    BUS_BY_LOCATION,
+    props<{
+        request: BusByLocationRequest
+    }>()
 )
 
 export const BusByLocationSuccess = createAction(
-  BUS_BY_LOCATION_SUCCESS,
-  props<{
-    data: any
-  }>()
+    BUS_BY_LOCATION_SUCCESS,
+    props<{
+        data: any
+    }>()
 )
 
 export const BusByLocationFail = createAction(
-  BUS_BY_LOCATION_FAIL,
-  props<{
-    error: any
-  }>()
+    BUS_BY_LOCATION_FAIL,
+    props<{
+        error: any
+    }>()
 )
 
 // by-route Actions
 export const BusByRoute = createAction(
-  BUS_BY_ROUTE,
-  props<{
-    request: BusByRouteRequest
-  }>()
+    BUS_BY_ROUTE,
+    props<{
+        request: BusByRouteRequest
+    }>()
 )
 
 export const BusByRouteSuccess = createAction(
-  BUS_BY_ROUTE_SUCCESS,
-  props<{
-    data: any
-  }>()
+    BUS_BY_ROUTE_SUCCESS,
+    props<{
+        data: any
+    }>()
 )
 
 export const BusByRouteFail = createAction(
-  BUS_BY_ROUTE_FAIL,
-  props<{
-    error: any
-  }>()
+    BUS_BY_ROUTE_FAIL,
+    props<{
+        error: any
+    }>()
 )
 
 // by-ids Actions
 export const BusById = createAction(
-  BUS_BY_IDS,
-  props<{
-    request: BusByIdRequest
-  }>()
+    BUS_BY_IDS,
+    props<{
+        request: BusByIdRequest
+    }>()
 )
 
 export const BusByIdSuccess = createAction(
-  BUS_BY_IDS_SUCCESS,
-  props<{
-    data: any
-  }>()
+    BUS_BY_IDS_SUCCESS,
+    props<{
+        data: any
+    }>()
 )
 
 export const BusByIdFail = createAction(
-  BUS_BY_IDS_FAIL,
-  props<{
-    error: any
-  }>()
+    BUS_BY_IDS_FAIL,
+    props<{
+        error: any
+    }>()
 )
 
 // routes Actions
 export const BusRoutes = createAction(
-  BUS_ROUTES
+    BUS_ROUTES
 )
 
 export const BusRoutesSuccess = createAction(
-  BUS_ROUTES_SUCCESS,
-  props<{
-    data: any
-  }>()
+    BUS_ROUTES_SUCCESS,
+    props<{
+        data: any
+    }>()
 )
 
 export const BusRoutesFail = createAction(
-  BUS_ROUTES_FAIL,
-  props<{
-    error: any
-  }>()
+    BUS_ROUTES_FAIL,
+    props<{
+        error: any
+    }>()
 )

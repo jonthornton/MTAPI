@@ -12,18 +12,18 @@ export const initialState: State = {
 }
 
 const busRoutesReducer = createReducer(
-  initialState,
-  on(busActions.BusRoutes, (state, {}) => ({
-    ...state
-  })),
-  on(busActions.BusRoutesSuccess, (state, {data}) => ({
-    ...state,
-    data: data
-  })),
-  on(busActions.BusRoutesFail, (state, {error}) => ({
-    ...state,
-    error: error
-  }))
+    initialState,
+    on(busActions.BusRoutes, (state, {}) => ({
+      ...state
+    })),
+    on(busActions.BusRoutesSuccess, (state, {data}) => ({
+      ...state,
+      data: data
+    })),
+    on(busActions.BusRoutesFail, (state, {error}) => ({
+      ...state,
+      error: error
+    }))
 )
 
 export function reducer(state: State | undefined, action: Action) {

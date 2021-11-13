@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
+import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Observable} from "rxjs";
-import {map, catchError} from "rxjs/operators";
+import {catchError, map} from "rxjs/operators";
 
-//let BusRestAPIUrl = 'http://' + self.location.host.split(':')[0] +':5000/bus'
+//let BusRestAPIUrl = 'http://' + self.location.host.split(':')[0] +':5000'
 let BusRestAPIUrl = 'http://127.0.0.1:5000/bus';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AsyncBusService {
-
   constructor(private http: HttpClient) { }
 
   byLocation(latitude: number, longitude: number, num: number): Observable<any> {
@@ -34,7 +33,7 @@ export class AsyncBusService {
   }
 
   byId(ids: any[]): Observable<any> {
-    let apiUrl = BusRestAPIUrl + "/by-ids/"
+    let apiUrl = BusRestAPIUrl + "/by-id/"
     let headers = new HttpHeaders();
     let params = new HttpParams();
 
@@ -59,9 +58,9 @@ export class AsyncBusService {
   }
 
   executeRequest(apiUrl: string, headers: any, params: any): Observable<any> {
-    return this.http.post<any>(apiUrl, {}, ({headers: headers, params: params}))
-      .pipe(map((response: Response) => { return response; }),
-        catchError((error: any) => this.handleError(error)))
+    return this.http.post<any>(apiUrl, {}, ({params: params}))
+        .pipe(map((response: Response) => { return response; }),
+            catchError((error: any) => this.handleError(error)))
   }
 
   private handleError(error: any): Promise<any> {
