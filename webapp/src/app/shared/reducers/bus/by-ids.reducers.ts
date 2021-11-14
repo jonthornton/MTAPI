@@ -14,19 +14,19 @@ export const initialState: State = {
 }
 
 const busByIdReducer = createReducer(
-  initialState,
-  on(busActions.BusById, (state, {request}) => ({
-    ...state,
-    ids: request.ids
-  })),
-  on(busActions.BusByIdSuccess, (state, {data}) => ({
-    ...state,
-    data: data
-  })),
-  on(busActions.BusByIdFail, (state, {error}) => ({
-    ...state,
-    error: error
-  }))
+    initialState,
+    on(busActions.BusById, (state, {request}) => ({
+      ...state,
+      ids: request.ids
+    })),
+    on(busActions.BusByIdSuccess, (state, {data}) => ({
+      ...state,
+      data: data
+    })),
+    on(busActions.BusByIdFail, (state, {error}) => ({
+      ...state,
+      error: error
+    }))
 )
 
 export function reducer(state: State | undefined, action: Action) {
