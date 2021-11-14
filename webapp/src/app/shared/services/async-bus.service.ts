@@ -34,7 +34,7 @@ export class AsyncBusService {
   }
 
   byId(ids: any[]): Observable<any> {
-    let apiUrl = BusRestAPIUrl + "/by-ids/"
+    let apiUrl = BusRestAPIUrl + "/by-id/"
     let headers = new HttpHeaders();
     let params = new HttpParams();
 

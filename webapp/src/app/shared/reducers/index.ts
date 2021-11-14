@@ -6,7 +6,7 @@ import * as fromTrainRoutes from './train/routes.reducers';
 import * as fromBusByLocation from './bus/by-location.reducers';
 import * as fromBusByRoute from './bus/by-route.reducers';
 import * as fromBusById from './bus/by-ids.reducers';
-import * as fromBusRoutes from './bus/by-route.reducers';
+import * as fromBusRoutes from './bus/routes.reducers';
 
 export const reducers = {
   trainByLocation: fromTrainByLocation.reducer,

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {TrainById, TrainByRoute, TrainRoutes} from "../shared/actions/train.actions";
+import {MatButtonModule} from "@angular/material/button";
 import {Store} from "@ngrx/store";
 import {Observable} from "rxjs";
 
