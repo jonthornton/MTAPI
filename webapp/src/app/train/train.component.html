@@ -1,42 +1,46 @@
 <div class="train-dash">
-  <google-map [center]="center">
-    <map-transit-layer></map-transit-layer>
-    <map-marker *ngFor="let markerPosition of markerPositions"
-                [position]="markerPosition"
-                [options]="markerOptions"></map-marker>
-  </google-map>
-  <div>
-    <mat-form-field appearance="fill">
-      <mat-label>Route</mat-label>
-      <mat-select (selectionChange)="selectRoute($event)">
-        <mat-option *ngFor="let route of routesData" [value]="route">
-          {{route}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field appearance="fill" *ngIf="selectedRoute">
-      <mat-label>Station</mat-label>
-      <mat-select (selectionChange)="selectStation($event)">
-        <mat-option *ngFor="let station of routeStationsData" [value]="station">
-          {{station.name}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-    <div *ngIf="selectedStation">
-      <div *ngFor="let station of idStationData">
-        <span>North Bound Trains</span>
+    <div fxLayout="row wrap">
+        <div fxFlex="50%" fxFlex.xs="100%" fxFlex.sm="100%">
+            <mat-form-field appearance="fill">
+                <mat-label>Route</mat-label>
+                <mat-select (selectionChange)="selectRoute($event)">
+                    <mat-option *ngFor="let route of routesData" [value]="route">
+                        {{route}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
 
-        <p *ngFor="let time of station['N']">
-          {{time.time | date:'shortTime'}}
-        </p>
-      </div>
-      <div *ngFor="let station of idStationData">
-        <span>South Bound Trains</span>
+            <mat-form-field appearance="fill" *ngIf="selectedRoute">
+                <mat-label>Station</mat-label>
+                <mat-select (selectionChange)="selectStation($event)">
+                    <mat-option *ngFor="let station of routeStationsData" [value]="station">
+                        {{station.name}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
 
-        <p *ngFor="let time of station['S']">
-          {{time.time | date:'shortTime'}}
-        </p>
-      </div>
+            <div *ngIf="selectedStation">
+                <div *ngFor="let station of idStationData">
+                    <button mat-raised-button (click)="reload()">Refresh</button>
+                    <h2>North Bound Trains</h2>
+                    <p *ngFor="let time of station['N']">
+                        {{time.time | date:'mediumTime'}}
+                    </p>
+                    <h2>South Bound Trains</h2>
+                    <p *ngFor="let time of station['S']">
+                        {{time.time | date:'mediumTime'}}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div fxFlex="50%" fxFlex.xs="100%" fxFlex.sm="100%">
+            <google-map [center]="center">
+                <map-transit-layer></map-transit-layer>
+                <map-marker *ngFor="let markerPosition of markerPositions"
+                            [position]="markerPosition"
+                            [options]="markerOptions"></map-marker>
+            </google-map>
+        </div>
     </div>
-  </div>
 </div>

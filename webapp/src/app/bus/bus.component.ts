@@ -132,6 +132,9 @@ export class BusComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  reload(): void {
+  }
+
   selectRoute(event: any) {
     this.selectedRoute = true;
     this.store.dispatch(BusByRoute({request: {route: event.source.value}}));
