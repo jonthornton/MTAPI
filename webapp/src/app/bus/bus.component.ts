@@ -12,6 +12,7 @@ export class BusComponent implements OnInit {
   lat: number = 40.7831;
   lng: number = -73.9712;
   selectedRoute: boolean = false;
+  chosenRoute: string = "";
   selectedStation: boolean = false;
 
   center: google.maps.LatLngLiteral = {lat: this.lat, lng: this.lng};
@@ -137,6 +138,7 @@ export class BusComponent implements OnInit {
 
   selectRoute(event: any) {
     this.selectedRoute = true;
+    this.chosenRoute = event.source.value;
     this.store.dispatch(BusByRoute({request: {route: event.source.value}}));
     this.idStationData = [];
     this.markerPositions = [];

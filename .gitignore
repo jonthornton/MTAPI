@@ -21,6 +21,8 @@ stops/
 
 # dependencies
 /webapp/node_modules/
+/webapp/node_modules/.package-lock.json
+webapp/node_modules/.bin
 /webapp/.angular/
 
 # profiling files
