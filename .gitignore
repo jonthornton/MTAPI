@@ -60,3 +60,4 @@ testem.log
 Thumbs.db
 
 webapp/.idea/*
+server/.idea/*
