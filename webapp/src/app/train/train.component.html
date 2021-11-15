@@ -23,13 +23,13 @@
                 <div *ngFor="let station of idStationData">
                     <button mat-raised-button (click)="reload()">Refresh</button>
                     <h2>North Bound Trains</h2>
-                    <p *ngFor="let time of station['N']">
-                        {{time.time | date:'mediumTime'}}
-                    </p>
+                    <div *ngFor="let time of station['N']">
+                        <p *ngIf="time.route == chosenRoute">{{time.time | date:'mediumTime'}}</p>
+                    </div>
                     <h2>South Bound Trains</h2>
-                    <p *ngFor="let time of station['S']">
-                        {{time.time | date:'mediumTime'}}
-                    </p>
+                    <div *ngFor="let time of station['S']">
+                        <p *ngIf="time.route == chosenRoute">{{time.time | date:'mediumTime'}}</p>
+                    </div>
                 </div>
             </div>
         </div>
