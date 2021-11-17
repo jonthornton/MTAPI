@@ -157,12 +157,14 @@ class Mtapi(object):
         self._stations = {}
         self._stops_to_stations = {}
         self._routes = {}
+        self._train_routes_alerts = defaultdict(list)
         self._read_lock = threading.RLock()
 
         # bus elements
         self._bus_stations = {}
         self._bus_stops_to_stations = {}
         self._bus_routes = {}
+        self._bus_routes_alerts = defaultdict(list)
 
         # initialize the stations database
         try:
@@ -271,11 +273,12 @@ class Mtapi(object):
         for id in stations:
             stations[id].sort_trains(self._MAX_TRAINS)
 
-        stations = self._train_alert(stations)
+        stations, train_route_alerts = self._train_alert(stations)
 
         with self._read_lock:
             self._routes = routes
             self._stations = stations
+            self._train_routes_alerts = train_route_alerts
 
     def _bus_update(self):
         logger.info('updating bus...')
@@ -332,14 +335,17 @@ class Mtapi(object):
         for id in stations:
             stations[id].sort_trains(self._MAX_TRAINS)
 
-        stations = self._bus_alert(stations)
+        stations, bus_route_alerts = self._bus_alert(stations)
 
         with self._read_lock:
             self._bus_routes = routes
             self._bus_stations = stations
+            self._bus_routes_alerts = bus_route_alerts
 
 
     def _train_alert(self, stations):
+        train_route_alerts = defaultdict(list)
+
         logger.info("updating train alerts...")
 
         # clear previous alerts to ensure we have the most up to date data
@@ -362,11 +368,21 @@ class Mtapi(object):
                             stations[self._stops_to_stations[informed_entity.stop_id[:-1]]].add_alert(entity.alert, entity.id)
                         except KeyError as e1:
                             logger.error("{0} stop does not exist. Might need to update stations file.".format(informed_entity.stop_id))
+                if informed_entity.route_id:
+                    alert_instance = dict()
+                    alert_instance['header'] = entity.alert.header_text.translation[0].text
+                    for translation in entity.alert.description_text.translation:
+                        alert_instance[translation.language] = translation.text
+                    alert_instance['last_update'] = self._train_alert_last_update
 
-        return stations
+                    train_route_alerts[informed_entity.route_id].append(alert_instance)
+
+        return stations, train_route_alerts
 
 
     def _bus_alert(self, stations):
+        bus_route_alerts = defaultdict(list)
+
         logger.info("updating bus alerts...")
 
         # clear previous alerts to ensure we have the most up to date data
@@ -392,7 +408,16 @@ class Mtapi(object):
                             logger.error("{0} stop does not exist. Might need to update stations file.".format(
                                 informed_entity.stop_id))
 
-        return stations
+                if informed_entity.route_id:
+                    alert_instance = dict()
+                    alert_instance['header'] = entity.alert.header_text.translation[0].text
+                    for translation in entity.alert.description_text.translation:
+                        alert_instance[translation.language] = translation.text
+                    alert_instance['last_update'] = self._bus_alert_last_update
+
+                    bus_route_alerts[informed_entity.route_id].append(alert_instance)
+
+        return stations, bus_route_alerts
 
 
     def last_update(self):
@@ -488,14 +513,56 @@ class Mtapi(object):
         route = route.upper()
 
         if self.is_expired():
-            self._bus_update()
+            self._update()
 
         with self._read_lock:
-
             out = [{self._stops_to_stations[k]: self._stations[self._stops_to_stations[k]].alerts.values()} for k in self._routes[route] if len(self._stations[self._stops_to_stations[k]].alerts.values()) > 0]
 
         return out
 
+    def train_get_all_route_alerts(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._update()
+
+        with self._read_lock:
+            out = self._train_routes_alerts[route]
+
+        return out
+
+    def bus_get_alert_by_stop(self, stopid):
+        stopid = stopid.upper()
+        if self.is_expired():
+            self._bus_update()
+
+        with self._read_lock:
+            out = self._bus_stations[self._bus_stops_to_stations[stopid]].alerts.values()
+
+        return out
+
+
+    def bus_get_alerts_route(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._bus_update()
+
+        with self._read_lock:
+            out = [{self._bus_stops_to_stations[k]: self._bus_stations[self._bus_stops_to_stations[k]].alerts.values()} for k in self._bus_routes[route] if len(self._bus_stations[self._bus_stops_to_stations[k]].alerts.values()) > 0]
+
+        return out
+
+    def bus_get_all_route_alerts(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._bus_update()
+
+        with self._read_lock:
+            out = self._bus_routes_alerts[route]
+
+        return out
 
     def is_expired(self):
         if self._THREADED and self.threader and self.threader.restart_if_dead():

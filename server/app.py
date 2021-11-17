@@ -197,7 +197,16 @@ def alert_by_stop(stop):
     except KeyError as e:
         abort(404)
 
+@app.route('/bus/alert-by-stop/<stop>', methods=['GET', 'POST'])
+def bus_alert_by_stop(stop):
+    if stop.islower():
+        return redirect(request.host_url + 'bus/alert-by-stop/' + stop.upper(), code=301)
 
+    try:
+        data = mta.bus_get_alert_by_stop(stop)
+        return _make_envelope(data)
+    except KeyError as e:
+        abort(404)
 
 @app.route('/alerts-by-route/<route>', methods=['GET', 'POST'])
 def alerts_by_route(route):
@@ -211,6 +220,39 @@ def alerts_by_route(route):
         "last_updated": mta.last_update()
     })
 
+@app.route('/bus/alerts-by-route/<route>', methods=['GET', 'POST'])
+def bus_alerts_by_route(route):
+    if route.islower():
+        return redirect(request.host_url + 'bus/alerts-by-route/' + route.upper(), code=301)
+
+    data = mta.bus_get_alerts_route(route)
+
+    return jsonify({
+        "data": data,
+        "last_updated": mta.last_update()
+    })
+
+@app.route('/all-alerts-by-route/<route>', methods=['GET', 'POST'])
+def all_alerts_by_route(route):
+    if route.islower():
+        return redirect(request.host_url + 'all-alerts-by-route/' + route.upper(), code=301)
+
+    try:
+        data = mta.train_get_all_route_alerts(route)
+        return _make_envelope(data)
+    except KeyError as e:
+        abort(404)
+
+@app.route('/bus/all-alerts-by-route/<route>', methods=['GET', 'POST'])
+def bus_all_alerts_by_route(route):
+    if route.islower():
+        return redirect(request.host_url + 'bus/all-alerts-by-route/' + route.upper(), code=301)
+
+    try:
+        data = mta.bus_get_all_route_alerts(route)
+        return _make_envelope(data)
+    except KeyError as e:
+        abort(404)
 
 def _envelope_reduce(a, b):
     if a['last_update'] and b['last_update']:
