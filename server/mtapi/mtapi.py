@@ -23,6 +23,7 @@ class Mtapi(object):
             self.json = json
             self.trains = {}
             self.clear_train_data()
+            self.alerts = {}
 
         def __getitem__(self, key):
             return self.json[key]
@@ -34,6 +35,23 @@ class Mtapi(object):
                 'time': train_time
             })
             self.last_update = feed_time
+
+        def add_alert(self, alert, id):
+            try:
+                parsed_id = id.split('#')[1]
+            except IndexError:
+                parsed_id = id
+
+            if parsed_id not in self.alerts.keys():
+                alert_instance = dict()
+                alert_instance['header'] = alert.header_text.translation[0].text
+                for translation in alert.description_text.translation:
+                    alert_instance[translation.language] = translation.text
+                alert_instance['last_update'] = self.last_update
+                self.alerts[parsed_id] = alert_instance
+
+        def clear_alerts(self):
+            self.alerts = {}
 
         def clear_train_data(self):
             self.trains['N'] = []
@@ -62,6 +80,7 @@ class Mtapi(object):
             self.json = json
             self.trains = {}
             self.clear_train_data()
+            self.alerts = {}
 
         def __getitem__(self, key):
             return self.json[key]
@@ -73,6 +92,24 @@ class Mtapi(object):
                 'time': train_time
             })
             self.last_update = feed_time
+
+        def add_alert(self, alert, id):
+            try:
+                parsed_id = id.split('#')[1]
+            except IndexError:
+                parsed_id = id
+
+            if parsed_id not in self.alerts.keys():
+                alert_instance = dict()
+                alert_instance['header'] = alert.header_text.translation[0].text
+                for translation in alert.description_text.translation:
+                    alert_instance[translation.language] = translation.text
+                alert_instance['last_update'] = self.last_update
+                self.alerts[parsed_id] = alert_instance
+
+        def clear_alerts(self):
+            self.alerts = {}
+
 
         def clear_train_data(self):
             self.trains['1'] = []
@@ -105,8 +142,11 @@ class Mtapi(object):
         'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
         'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si'
     ]
+    _TRAIN_ALERT_FEED_URL = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts'
 
     _BUS_FEED_URL = ['http://gtfsrt.prod.obanyc.com/tripUpdates']
+
+    _BUS_ALERT_FEED_URL = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fbus-alerts'
 
     def __init__(self, key, stations_file, bus_stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
         self._KEY = key
@@ -117,12 +157,14 @@ class Mtapi(object):
         self._stations = {}
         self._stops_to_stations = {}
         self._routes = {}
+        self._train_routes_alerts = defaultdict(list)
         self._read_lock = threading.RLock()
 
         # bus elements
         self._bus_stations = {}
         self._bus_stops_to_stations = {}
         self._bus_routes = {}
+        self._bus_routes_alerts = defaultdict(list)
 
         # initialize the stations database
         try:
@@ -231,9 +273,12 @@ class Mtapi(object):
         for id in stations:
             stations[id].sort_trains(self._MAX_TRAINS)
 
+        stations, train_route_alerts = self._train_alert(stations)
+
         with self._read_lock:
             self._routes = routes
             self._stations = stations
+            self._train_routes_alerts = train_route_alerts
 
     def _bus_update(self):
         logger.info('updating bus...')
@@ -290,9 +335,90 @@ class Mtapi(object):
         for id in stations:
             stations[id].sort_trains(self._MAX_TRAINS)
 
+        stations, bus_route_alerts = self._bus_alert(stations)
+
         with self._read_lock:
             self._bus_routes = routes
             self._bus_stations = stations
+            self._bus_routes_alerts = bus_route_alerts
+
+
+    def _train_alert(self, stations):
+        train_route_alerts = defaultdict(list)
+
+        logger.info("updating train alerts...")
+
+        # clear previous alerts to ensure we have the most up to date data
+        for station in stations.values():
+            station.clear_alerts()
+
+        self._train_alert_last_update = datetime.datetime.now(TZ)
+        mta_data = self._load_mta_feed(self._TRAIN_ALERT_FEED_URL)
+
+        if not mta_data:
+            return
+
+        for entity in mta_data.entity:
+            for informed_entity in entity.alert.informed_entity:
+                if informed_entity.stop_id:
+                    try:
+                        stations[self._stops_to_stations[informed_entity.stop_id]].add_alert(entity.alert, entity.id)
+                    except KeyError as e:
+                        try:
+                            stations[self._stops_to_stations[informed_entity.stop_id[:-1]]].add_alert(entity.alert, entity.id)
+                        except KeyError as e1:
+                            logger.error("{0} stop does not exist. Might need to update stations file.".format(informed_entity.stop_id))
+                if informed_entity.route_id:
+                    alert_instance = dict()
+                    alert_instance['header'] = entity.alert.header_text.translation[0].text
+                    for translation in entity.alert.description_text.translation:
+                        alert_instance[translation.language] = translation.text
+                    alert_instance['last_update'] = self._train_alert_last_update
+
+                    train_route_alerts[informed_entity.route_id].append(alert_instance)
+
+        return stations, train_route_alerts
+
+
+    def _bus_alert(self, stations):
+        bus_route_alerts = defaultdict(list)
+
+        logger.info("updating bus alerts...")
+
+        # clear previous alerts to ensure we have the most up to date data
+        for station in stations.values():
+            station.clear_alerts()
+
+        self._bus_alert_last_update = datetime.datetime.now(TZ)
+        mta_data = self._load_mta_feed(self._BUS_ALERT_FEED_URL)
+
+        if not mta_data:
+            return
+
+        for entity in mta_data.entity:
+            for informed_entity in entity.alert.informed_entity:
+                if informed_entity.stop_id:
+                    try:
+                        stations[self._bus_stops_to_stations[informed_entity.stop_id]].add_alert(entity.alert, entity.id)
+                    except KeyError as e:
+                        try:
+                            stations[self._bus_stops_to_stations[informed_entity.stop_id[:-1]]].add_alert(entity.alert,
+                                                                                                      entity.id)
+                        except KeyError as e1:
+                            logger.error("{0} stop does not exist. Might need to update stations file.".format(
+                                informed_entity.stop_id))
+
+                if informed_entity.route_id:
+                    alert_instance = dict()
+                    alert_instance['header'] = entity.alert.header_text.translation[0].text
+                    for translation in entity.alert.description_text.translation:
+                        alert_instance[translation.language] = translation.text
+                    alert_instance['last_update'] = self._bus_alert_last_update
+
+                    bus_route_alerts[informed_entity.route_id].append(alert_instance)
+
+        return stations, bus_route_alerts
+
 
     def last_update(self):
         return self._last_update
@@ -369,6 +495,72 @@ class Mtapi(object):
 
         with self._read_lock:
             out = [ self._bus_stations[k].serialize() for k in ids ]
+
+        return out
+
+    def train_get_alert_by_stop(self, stopid):
+        stopid = stopid.upper()
+        if self.is_expired():
+            self._update()
+
+        with self._read_lock:
+            out = self._stations[self._stops_to_stations[stopid]].alerts.values()
+
+        return out
+
+
+    def train_get_alerts_route(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._update()
+
+        with self._read_lock:
+            out = [{self._stops_to_stations[k]: self._stations[self._stops_to_stations[k]].alerts.values()} for k in self._routes[route] if len(self._stations[self._stops_to_stations[k]].alerts.values()) > 0]
+
+        return out
+
+    def train_get_all_route_alerts(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._update()
+
+        with self._read_lock:
+            out = self._train_routes_alerts[route]
+
+        return out
+
+    def bus_get_alert_by_stop(self, stopid):
+        stopid = stopid.upper()
+        if self.is_expired():
+            self._bus_update()
+
+        with self._read_lock:
+            out = self._bus_stations[self._bus_stops_to_stations[stopid]].alerts.values()
+
+        return out
+
+
+    def bus_get_alerts_route(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._bus_update()
+
+        with self._read_lock:
+            out = [{self._bus_stops_to_stations[k]: self._bus_stations[self._bus_stops_to_stations[k]].alerts.values()} for k in self._bus_routes[route] if len(self._bus_stations[self._bus_stops_to_stations[k]].alerts.values()) > 0]
+
+        return out
+
+    def bus_get_all_route_alerts(self, route):
+        route = route.upper()
+
+        if self.is_expired():
+            self._bus_update()
+
+        with self._read_lock:
+            out = self._bus_routes_alerts[route]
 
         return out
 
