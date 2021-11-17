@@ -64,6 +64,7 @@ mta = Mtapi(
     expires_seconds=app.config['CACHE_SECONDS'],
     threaded=app.config['THREADED'])
 
+'''
 def cross_origin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -77,9 +78,10 @@ def cross_origin(f):
         return resp
 
     return decorated_function
+'''
 
 @app.route('/')
-@cross_origin
+#@cross_origin
 def index():
     return jsonify({
         'title': 'MTAPI',
@@ -87,7 +89,7 @@ def index():
         })
 
 @app.route('/by-location', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
@@ -104,7 +106,7 @@ def by_location():
     return _make_envelope(data)
 
 @app.route('/bus/by-location', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def bus_by_location():
     try:
         location = (float(request.args['lat']), float(request.args['lon']))
@@ -121,7 +123,7 @@ def bus_by_location():
     return _make_envelope(data)
 
 @app.route('/by-route/<route>', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def by_route(route):
 
     if route.islower():
@@ -135,7 +137,7 @@ def by_route(route):
 
 
 @app.route('/bus/by-route/<route>', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def bus_by_route(route):
 
     if route.islower():
@@ -148,7 +150,7 @@ def bus_by_route(route):
         abort(404)
 
 @app.route('/by-id/<id_string>', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def by_index(id_string):
     ids = id_string.split(',')
     try:
@@ -158,7 +160,7 @@ def by_index(id_string):
         abort(404)
 
 @app.route('/bus/by-id/<id_string>', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def bus_by_index(id_string):
     ids = id_string.split(',')
     try:
@@ -168,7 +170,7 @@ def bus_by_index(id_string):
         abort(404)
 
 @app.route('/routes', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def routes():
     return jsonify({
         'data': sorted(mta.get_routes()),
@@ -176,12 +178,39 @@ def routes():
         })
 
 @app.route('/bus/routes', methods=['GET', 'POST'])
-@cross_origin
+#@cross_origin
 def bus_routes():
     return jsonify({
         'data': sorted(mta.bus_get_routes()),
         'updated': mta.bus_last_update()
         })
+
+@app.route('/alert-by-stop/<stop>', methods=['GET', 'POST'])
+#@cross_origin
+def alert_by_stop(stop):
+    if stop.islower():
+        return redirect(request.host_url + 'alert-by-stop/' + stop.upper(), code=301)
+
+    try:
+        data = mta.train_get_alert_by_stop(stop)
+        return _make_envelope(data)
+    except KeyError as e:
+        abort(404)
+
+
+
+@app.route('/alerts-by-route/<route>', methods=['GET', 'POST'])
+def alerts_by_route(route):
+    if route.islower():
+        return redirect(request.host_url + 'alerts-by-route/' + route.upper(), code=301)
+
+    data = mta.train_get_alerts_route(route)
+
+    return jsonify({
+        "data": data,
+        "last_updated": mta.last_update()
+    })
+
 
 def _envelope_reduce(a, b):
     if a['last_update'] and b['last_update']:
