@@ -41,7 +41,7 @@ export class TrainComponent implements OnInit {
   stationsByIdFail$: Observable<any>;
   idStationError: any = "";
 
-  markerOptions: google.maps.MarkerOptions = {draggable: false};
+  markerOptions: google.maps.MarkerOptions = {draggable: false, icon: "/assets/images/subway-marker.png"};
   markerPositions: google.maps.LatLngLiteral[] = [];
 
   constructor(private store: Store<any>) {
