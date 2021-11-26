@@ -14,6 +14,7 @@ export class TrainComponent implements OnInit {
   selectedRoute: boolean = false;
   chosenRoute: string = "";
   selectedStation: boolean = false;
+  chosenStation: string = "";
 
   center: google.maps.LatLngLiteral = {lat: this.lat, lng: this.lng};
 
@@ -134,6 +135,7 @@ export class TrainComponent implements OnInit {
   }
 
   reload(): void {
+    this.store.dispatch(TrainById({request: {ids: [this.chosenStation]}}));
   }
 
   selectRoute(event: any) {
@@ -147,6 +149,7 @@ export class TrainComponent implements OnInit {
   selectStation(event: any) {
     this.selectedStation = true;
     this.idStationData = [];
+    this.chosenStation = event.source.value.id;
     this.store.dispatch(TrainById({request: {ids: [event.source.value.id]}}));
     this.lat = event.source.value.location[0];
     this.lng = event.source.value.location[1];
