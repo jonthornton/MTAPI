@@ -62,4 +62,40 @@ export class BusEffects {
             })
         )
     })
+
+    allAlertsByRoute$ = createEffect(() => {
+        return this.actions.pipe(
+            ofType(busActions.BUS_ALL_ALERTS_BY_ROUTE),
+            switchMap(action => {
+                return this.busService.allAlertsByRoute((action as any).request.route).pipe(
+                    map(allAlertsByRouteResult => busActions.BusAllAlertsByRouteSuccess({data: allAlertsByRouteResult})),
+                    catchError(allAlertsByRouteError => of(busActions.BusAllAlertsByRouteFail({error: allAlertsByRouteError.error})))
+                )
+            })
+        )
+    })
+
+    alertByroute$ = createEffect(() => {
+        return this.actions.pipe(
+            ofType(busActions.BUS_ALERT_BY_ROUTE),
+            switchMap(action => {
+                return this.busService.alertByRoute((action as any).request.route).pipe(
+                    map(alertsByRouteResult => busActions.BusAlertByRouteSuccess({data: alertsByRouteResult})),
+                    catchError(alertsByRouteError => of(busActions.BusAlertByRouteFail({error: alertsByRouteError.error})))
+                )
+            })
+        )
+    })
+
+    alertByStop$ = createEffect(() => {
+        return this.actions.pipe(
+            ofType(busActions.BUS_ALERT_BY_STOP),
+            switchMap(action => {
+                return this.busService.alertByStop((action as any).request.route).pipe(
+                    map(alertsByStopResult => busActions.BusAlertByStopSuccess({data: alertsByStopResult})),
+                    catchError(alertsByStopError => of(busActions.BusAlertByRouteFail({error: alertsByStopError.error})))
+                )
+            })
+        )
+    })
 }

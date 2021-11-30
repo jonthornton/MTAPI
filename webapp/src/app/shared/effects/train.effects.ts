@@ -62,4 +62,40 @@ export class TrainEffects {
       })
     )
   })
+
+  allAlertsByRoute$ = createEffect(() => {
+      return this.actions.pipe(
+        ofType(trainActions.TRAIN_ALL_ALERTS_BY_ROUTE),
+        switchMap(action => {
+          return this.trainService.allAlertsByRoute((action as any).request.route).pipe(
+            map(allAlertsByRouteResult => trainActions.TrainAllAlertsByRouteSuccess({data: allAlertsByRouteResult})),
+            catchError(allAlertsByRouteError => of(trainActions.TrainAllAlertsByRouteFail({error: allAlertsByRouteError.error})))
+          )
+        })
+      )
+  })
+
+  alertByroute$ = createEffect(() => {
+    return this.actions.pipe(
+      ofType(trainActions.TRAIN_ALERT_BY_ROUTE),
+      switchMap(action => {
+        return this.trainService.alertByRoute((action as any).request.route).pipe(
+          map(alertsByRouteResult => trainActions.TrainAlertByRouteSuccess({data: alertsByRouteResult})),
+          catchError(alertsByRouteError => of(trainActions.TrainAlertByRouteFail({error: alertsByRouteError.error})))
+        )
+      })
+    )
+  })
+
+  alertByStop$ = createEffect(() => {
+    return this.actions.pipe(
+      ofType(trainActions.TRAIN_ALERT_BY_STOP),
+      switchMap(action => {
+        return this.trainService.alertByStop((action as any).request.route).pipe(
+          map(alertsByStopResult => trainActions.TrainAlertByStopSuccess({data: alertsByStopResult})),
+          catchError(alertsByStopError => of(trainActions.TrainAlertByRouteFail({error: alertsByStopError.error})))
+        )
+      })
+    )
+  })
 }

@@ -57,6 +57,30 @@ export class AsyncBusService {
     return this.executeRequest(apiUrl, headers, params);
   }
 
+  alertByStop(stop: string): Observable<any> {
+    let apiUrl = BusRestAPIUrl + '/alert-by-stop/' + stop;
+    let headers = new HttpHeaders();
+    let params = new HttpParams();
+
+    return this.executeRequest(apiUrl, headers, params);
+  }
+
+  alertByRoute(route: string): Observable<any> {
+    let apiUrl = BusRestAPIUrl + '/alerts-by-route/' + route;
+    let headers = new HttpHeaders();
+    let params = new HttpParams();
+
+    return this.executeRequest(apiUrl, headers, params);
+  }
+
+  allAlertsByRoute(route: string): Observable<any> {
+    let apiUrl = BusRestAPIUrl + '/all-alerts-by-route/' + route;
+    let headers = new HttpHeaders();
+    let params = new HttpParams();
+
+    return this.executeRequest(apiUrl, headers, params);
+  }
+
   executeRequest(apiUrl: string, headers: any, params: any): Observable<any> {
     return this.http.post<any>(apiUrl, {}, ({params: params}))
         .pipe(map((response: Response) => { return response; }),

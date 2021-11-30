@@ -16,6 +16,18 @@ export const BUS_ROUTES =                 '[ROUTES] Routes Bus';
 export const BUS_ROUTES_SUCCESS =         '[ROUTES] Routes Bus Success';
 export const BUS_ROUTES_FAIL =            '[ROUTES] Routes Bus Fail';
 
+export const BUS_ALL_ALERTS_BY_ROUTE =    '[ALLALERTS] All Alerts By Route Bus';
+export const BUS_ALL_ALERTS_BY_ROUTE_SUCCESS = '[ALLALERTS] All Alerts By Route Bus Success';
+export const BUS_ALL_ALERTS_BY_ROUTE_FAIL = '[ALLALERTS] All Alerts By Route Bus Fail';
+
+export const BUS_ALERT_BY_ROUTE = '[ALERTBYROUTE] Alert By Route Bus';
+export const BUS_ALERT_BY_ROUTE_SUCCESS = '[ALERTBYROUTE] Alert By Route Bus Success';
+export const BUS_ALERT_BY_ROUTE_FAIL = '[ALERTBYROUTE] Alert By Route Bus Fail';
+
+export const BUS_ALERT_BY_STOP = '[ALERTBYSTOP] Alert By Stop Bus';
+export const BUS_ALERT_BY_STOP_SUCCESS = '[ALERTBYSTOP] Alert By Stop Bus Success';
+export const BUS_ALERT_BY_STOP_FAIL = '[ALERTBYSTOP] Alert By Stop Bus Fail';
+
 export interface BusByLocationRequest {
     lat: number,
     lon: number,
@@ -30,12 +42,13 @@ export interface BusByIdRequest {
     ids: any[]
 }
 
-/*
-need to figure out with variable number of args...maybe just array
-export interface BusByIdRequest {
-   ids: any[]
+export interface BusAllAlertsByRouteRequest {
+    route: string
 }
- */
+
+export interface BusAlertsByStopRequest {
+    stop: string;
+}
 
 // by-location Actions
 export const BusByLocation = createAction(
@@ -117,6 +130,73 @@ export const BusRoutesSuccess = createAction(
 
 export const BusRoutesFail = createAction(
     BUS_ROUTES_FAIL,
+    props<{
+        error: any
+    }>()
+)
+
+// all alerts by route
+export const BusAllAlertsByRoute = createAction(
+    BUS_ALL_ALERTS_BY_ROUTE,
+    props<{
+        request: BusAllAlertsByRouteRequest
+    }>()
+)
+
+export const BusAllAlertsByRouteSuccess = createAction(
+    BUS_ALL_ALERTS_BY_ROUTE_SUCCESS,
+    props<{
+        data: any
+    }>()
+)
+
+export const BusAllAlertsByRouteFail = createAction(
+    BUS_ALL_ALERTS_BY_ROUTE_FAIL,
+    props<{
+        error: any
+    }>()
+)
+
+// alert by route
+// uses BusAllAlertsByRouteRequest interface because both just require route as the request
+export const BusAlertByRoute = createAction(
+    BUS_ALERT_BY_ROUTE,
+    props<{
+        request: BusAllAlertsByRouteRequest
+    }>()
+)
+
+export const BusAlertByRouteSuccess = createAction(
+    BUS_ALERT_BY_ROUTE_SUCCESS,
+    props<{
+        data: any
+    }>()
+)
+
+export const BusAlertByRouteFail = createAction(
+    BUS_ALERT_BY_ROUTE_FAIL,
+    props<{
+        error: any
+    }>()
+)
+
+// alert by stop
+export const BusAlertByStop = createAction(
+    BUS_ALERT_BY_STOP,
+    props<{
+        request: BusAlertsByStopRequest
+    }>()
+)
+
+export const BusAlertByStopSuccess = createAction(
+    BUS_ALERT_BY_STOP_SUCCESS,
+    props<{
+        data: any
+    }>()
+)
+
+export const BusAlertByStopFail = createAction(
+    BUS_ALERT_BY_STOP_FAIL,
     props<{
         error: any
     }>()

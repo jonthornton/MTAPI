@@ -16,6 +16,18 @@ export const TRAIN_ROUTES =                 '[ROUTES] Routes Train';
 export const TRAIN_ROUTES_SUCCESS =         '[ROUTES] Routes Train Success';
 export const TRAIN_ROUTES_FAIL =            '[ROUTES] Routes Train Fail';
 
+export const TRAIN_ALL_ALERTS_BY_ROUTE =    '[ALLALERTS] All Alerts By Route Train';
+export const TRAIN_ALL_ALERTS_BY_ROUTE_SUCCESS = '[ALLALERTS] All Alerts By Route Train Success';
+export const TRAIN_ALL_ALERTS_BY_ROUTE_FAIL = '[ALLALERTS] All Alerts By Route Train Fail';
+
+export const TRAIN_ALERT_BY_ROUTE = '[ALERTBYROUTE] Alert By Route Train';
+export const TRAIN_ALERT_BY_ROUTE_SUCCESS = '[ALERTBYROUTE] Alert By Route Train Success';
+export const TRAIN_ALERT_BY_ROUTE_FAIL = '[ALERTBYROUTE] Alert By Route Train Fail';
+
+export const TRAIN_ALERT_BY_STOP = '[ALERTBYSTOP] Alert By Stop Train';
+export const TRAIN_ALERT_BY_STOP_SUCCESS = '[ALERTBYSTOP] Alert By Stop Train Success';
+export const TRAIN_ALERT_BY_STOP_FAIL = '[ALERTBYSTOP] Alert By Stop Train Fail';
+
 export interface TrainByLocationRequest {
   lat: number,
   lon: number,
@@ -30,12 +42,13 @@ export interface TrainByIdRequest {
   ids: any[]
 }
 
-/*
-need to figure out with variable number of args...maybe just array
-export interface TrainByIdRequest {
-   ids: any[]
+export interface TrainAllAlertsByRouteRequest {
+  route: string
 }
- */
+
+export interface TrainAlertsByStopRequest {
+    stop: string;
+}
 
 // by-location Actions
 export const TrainByLocation = createAction(
@@ -120,4 +133,71 @@ export const TrainRoutesFail = createAction(
   props<{
     error: any
   }>()
+)
+
+// all alerts by route
+export const TrainAllAlertsByRoute = createAction(
+    TRAIN_ALL_ALERTS_BY_ROUTE,
+    props<{
+      request: TrainAllAlertsByRouteRequest
+    }>()
+)
+
+export const TrainAllAlertsByRouteSuccess = createAction(
+    TRAIN_ALL_ALERTS_BY_ROUTE_SUCCESS,
+    props<{
+      data: any
+    }>()
+)
+
+export const TrainAllAlertsByRouteFail = createAction(
+    TRAIN_ALL_ALERTS_BY_ROUTE_FAIL,
+    props<{
+        error: any
+    }>()
+)
+
+// alert by route
+// uses TrainAllAlertsByRouteRequest interface because both just require route as the request
+export const TrainAlertByRoute = createAction(
+    TRAIN_ALERT_BY_ROUTE,
+    props<{
+        request: TrainAllAlertsByRouteRequest
+    }>()
+)
+
+export const TrainAlertByRouteSuccess = createAction(
+    TRAIN_ALERT_BY_ROUTE_SUCCESS,
+    props<{
+        data: any
+    }>()
+)
+
+export const TrainAlertByRouteFail = createAction(
+    TRAIN_ALERT_BY_ROUTE_FAIL,
+    props<{
+        error: any
+    }>()
+)
+
+// alert by stop
+export const TrainAlertByStop = createAction(
+    TRAIN_ALERT_BY_STOP,
+    props<{
+        request: TrainAlertsByStopRequest
+    }>()
+)
+
+export const TrainAlertByStopSuccess = createAction(
+    TRAIN_ALERT_BY_STOP_SUCCESS,
+    props<{
+        data: any
+    }>()
+)
+
+export const TrainAlertByStopFail = createAction(
+    TRAIN_ALERT_BY_STOP_FAIL,
+    props<{
+        error: any
+    }>()
 )
