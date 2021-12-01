@@ -1,6 +1,7 @@
 <div class="train-dash">
     <div fxLayout="row wrap">
         <div fxFlex="50%" fxFlex.xs="100%" fxFlex.sm="100%">
+
             <mat-form-field appearance="fill">
                 <mat-label>Route</mat-label>
                 <mat-select (selectionChange)="selectRoute($event)">
@@ -18,6 +19,27 @@
                     </mat-option>
                 </mat-select>
             </mat-form-field>
+
+            <mat-expansion-panel *ngIf="selectedRoute && allAlertsByRouteData != undefined">
+                <mat-expansion-panel-header>Route Alerts</mat-expansion-panel-header>
+                <div *ngFor="let alert of allAlertsByRouteData">
+                    <p><b>{{alert['header']}}</b></p>
+                    <div [innerHTML]="alert['en-html']"></div>
+                    <mat-divider></mat-divider>
+                </div>
+                <mat-divider></mat-divider>
+                <p>Updated: {{allAlertsByRouteDataUpdated | date:'mediumTime'}}</p>
+            </mat-expansion-panel>
+            <mat-expansion-panel *ngIf="selectedStation && alertsByStopData != undefined">
+                <mat-expansion-panel-header>Station Alerts</mat-expansion-panel-header>
+                <div *ngFor="let alert of alertsByStopData">
+                    <p><b>{{alert['header']}}</b></p>
+                    <div [innerHTML]="alert['en-html']"></div>
+                    <mat-divider></mat-divider>
+                </div>
+                <mat-divider></mat-divider>
+                <p>Updated: {{allAlertsByRouteDataUpdated | date:'mediumTime'}}</p>
+            </mat-expansion-panel>
 
             <div *ngIf="selectedStation">
                 <div *ngFor="let station of idStationData">

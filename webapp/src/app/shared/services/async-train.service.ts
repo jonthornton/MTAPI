@@ -57,6 +57,30 @@ export class AsyncTrainService {
     return this.executeRequest(apiUrl, headers, params);
   }
 
+  alertByStop(stop: string): Observable<any> {
+    let apiUrl = TrainRestAPIUrl + '/alert-by-stop/' + stop;
+    let headers = new HttpHeaders();
+    let params = new HttpParams();
+
+    return this.executeRequest(apiUrl, headers, params);
+  }
+
+  alertByRoute(route: string): Observable<any> {
+    let apiUrl = TrainRestAPIUrl + '/alerts-by-route/' + route;
+    let headers = new HttpHeaders();
+    let params = new HttpParams();
+
+    return this.executeRequest(apiUrl, headers, params);
+  }
+
+  allAlertsByRoute(route: string): Observable<any> {
+    let apiUrl = TrainRestAPIUrl + '/all-alerts-by-route/' + route;
+    let headers = new HttpHeaders();
+    let params = new HttpParams();
+
+    return this.executeRequest(apiUrl, headers, params);
+  }
+
   executeRequest(apiUrl: string, headers: any, params: any): Observable<any> {
     return this.http.post<any>(apiUrl, {}, ({params: params}))
       .pipe(map((response: Response) => { return response; }),

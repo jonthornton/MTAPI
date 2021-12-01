@@ -23,6 +23,8 @@ import {MatOptionModule} from "@angular/material/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {FlexLayoutModule} from '@angular/flex-layout';
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatDividerModule} from "@angular/material/divider";
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 
@@ -48,6 +50,8 @@ import { environment } from '../environments/environment';
     MatButtonModule,
     FlexLayoutModule,
     FormsModule,
+    MatExpansionModule,
+    MatDividerModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production,
       // Register the ServiceWorker as soon as the app is stable

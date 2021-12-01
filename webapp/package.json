@@ -27,6 +27,7 @@
     "@ngrx/store": "^12.5.1",
     "http-server": "^14.0.0",
     "rxjs": "~7.4.0",
+    "sanitize-html": "^2.6.0",
     "tslib": "^2.3.1",
     "zone.js": "~0.11.4"
   },
