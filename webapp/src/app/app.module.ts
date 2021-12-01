@@ -25,6 +25,8 @@ import {MatButtonModule} from "@angular/material/button";
 import {FlexLayoutModule} from '@angular/flex-layout';
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatDividerModule} from "@angular/material/divider";
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -49,7 +51,13 @@ import {MatDividerModule} from "@angular/material/divider";
     FlexLayoutModule,
     FormsModule,
     MatExpansionModule,
-    MatDividerModule
+    MatDividerModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      // Register the ServiceWorker as soon as the app is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    })
   ],
   providers: [AsyncBusService, AsyncTrainService],
   bootstrap: [AppComponent]

@@ -44,6 +44,7 @@
             <div *ngIf="selectedStation">
                 <div *ngFor="let station of idStationData">
                     <button mat-raised-button (click)="reload()">Refresh</button>
+                    <h3>Last Updated: {{ station['last_update'] | date:'mediumTime' }} </h3>
                     <h2>North Bound Trains</h2>
                     <div *ngFor="let time of station['N']">
                         <p *ngIf="time.route == chosenRoute">{{time.time | date:'mediumTime'}}</p>
