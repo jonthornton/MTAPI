@@ -75,7 +75,7 @@ export class TrainEffects {
       )
   })
 
-  alertByroute$ = createEffect(() => {
+  alertByRoute$ = createEffect(() => {
     return this.actions.pipe(
       ofType(trainActions.TRAIN_ALERT_BY_ROUTE),
       switchMap(action => {
@@ -91,7 +91,7 @@ export class TrainEffects {
     return this.actions.pipe(
       ofType(trainActions.TRAIN_ALERT_BY_STOP),
       switchMap(action => {
-        return this.trainService.alertByStop((action as any).request.route).pipe(
+        return this.trainService.alertByStop((action as any).request.stop).pipe(
           map(alertsByStopResult => trainActions.TrainAlertByStopSuccess({data: alertsByStopResult})),
           catchError(alertsByStopError => of(trainActions.TrainAlertByRouteFail({error: alertsByStopError.error})))
         )

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {BusById, BusByRoute, BusRoutes} from "../shared/actions/bus.actions";
+import {BusById, BusByRoute, BusRoutes, BusAllAlertsByRoute, BusAlertByStop} from "../shared/actions/bus.actions";
 import {Store} from "@ngrx/store";
 import {Observable} from "rxjs";
 
@@ -40,6 +40,22 @@ export class BusComponent implements OnInit {
 
   stationsByIdFail$: Observable<any>;
   idStationError: any = "";
+
+  // given route get all alerts
+  allAlertsByRouteSuccess$: Observable<any>;
+  allAlertsByRouteData: any[] = [];
+  allAlertsByRouteDataUpdated: any = "";
+
+  allAlertsByRouteFail$: Observable<any>;
+  allAlertsByRouteError: any = "";
+
+  // given station get alerts
+  alertsByStopSuccess$: Observable<any>;
+  alertsByStopData: any[] = [];
+  alertsByStopDataUpdated: any = "";
+
+  alertsByStopFail$: Observable<any>;
+  alertsByStopError: any = "";
 
   markerOptions: google.maps.MarkerOptions = {draggable: false, icon: "/assets/images/bus-marker.png"};
   markerPositions: google.maps.LatLngLiteral[] = [];
@@ -127,6 +143,53 @@ export class BusComponent implements OnInit {
       }
     })
 
+    this.allAlertsByRouteSuccess$ = this.store.select(s => s.busAllAlertsByRoute.data);
+    this.allAlertsByRouteSuccess$.subscribe((data: any) => {
+      if (data) {
+        this.allAlertsByRouteData = data.data;
+        this.allAlertsByRouteDataUpdated = data.updated;
+        this.allAlertsByRouteError = "";
+      } else {
+        this.allAlertsByRouteData = [];
+        this.allAlertsByRouteDataUpdated = "";
+      }
+    })
+
+    this.allAlertsByRouteFail$ = this.store.select(s => s.busAllAlertsByRoute.error);
+    this.allAlertsByRouteFail$.subscribe((error: any) => {
+      if (error) {
+        this.allAlertsByRouteError = error;
+        this.allAlertsByRouteData = [];
+        this.allAlertsByRouteDataUpdated = "";
+      } else {
+        this.allAlertsByRouteError = "";
+      }
+    })
+
+    this.alertsByStopSuccess$ = this.store.select(s => s.busAlertByStop.data);
+    this.alertsByStopSuccess$.subscribe((data: any) => {
+      if (data) {
+        this.alertsByStopData = data.data;
+        this.alertsByStopDataUpdated = data.updated;
+        this.alertsByStopError = "";
+      } else {
+        this.alertsByStopData = [];
+        this.alertsByStopDataUpdated = "";
+      }
+    })
+
+    this.alertsByStopFail$ = this.store.select(s => s.busAlertByStop.error);
+    this.alertsByStopFail$.subscribe((error: any) => {
+      if (error) {
+        this.alertsByStopError = error;
+        this.alertsByStopData = [];
+        this.alertsByStopDataUpdated = "";
+      } else {
+        this.alertsByStopError = "";
+      }
+    })
+
+
     this.store.dispatch(BusRoutes());
   }
 
@@ -139,9 +202,14 @@ export class BusComponent implements OnInit {
   selectRoute(event: any) {
     this.selectedRoute = true;
     this.chosenRoute = event.source.value;
+
     this.store.dispatch(BusByRoute({request: {route: event.source.value}}));
     this.idStationData = [];
     this.markerPositions = [];
+
+    this.store.dispatch(BusAllAlertsByRoute({request: {route: event.source.value}}));
+    this.allAlertsByRouteData = [];
+    this.allAlertsByRouteDataUpdated = "";
   }
 
   selectStation(event: any) {
@@ -151,6 +219,8 @@ export class BusComponent implements OnInit {
     this.lat = event.source.value.location[0];
     this.lng = event.source.value.location[1];
     this.center = {lat: this.lat, lng: this.lng};
+
+    this.store.dispatch(BusAlertByStop({request: {stop: event.source.value.id}}))
   }
 
   constructStationMarkers() {

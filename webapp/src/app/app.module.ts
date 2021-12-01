@@ -23,6 +23,8 @@ import {MatOptionModule} from "@angular/material/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {FlexLayoutModule} from '@angular/flex-layout';
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatDividerModule} from "@angular/material/divider";
 
 @NgModule({
   declarations: [
@@ -45,7 +47,9 @@ import {FlexLayoutModule} from '@angular/flex-layout';
     MatOptionModule,
     MatButtonModule,
     FlexLayoutModule,
-    FormsModule
+    FormsModule,
+    MatExpansionModule,
+    MatDividerModule
   ],
   providers: [AsyncBusService, AsyncTrainService],
   bootstrap: [AppComponent]

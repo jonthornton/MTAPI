@@ -75,7 +75,7 @@ export class BusEffects {
         )
     })
 
-    alertByroute$ = createEffect(() => {
+    alertByRoute$ = createEffect(() => {
         return this.actions.pipe(
             ofType(busActions.BUS_ALERT_BY_ROUTE),
             switchMap(action => {
@@ -91,7 +91,7 @@ export class BusEffects {
         return this.actions.pipe(
             ofType(busActions.BUS_ALERT_BY_STOP),
             switchMap(action => {
-                return this.busService.alertByStop((action as any).request.route).pipe(
+                return this.busService.alertByStop((action as any).request.stop).pipe(
                     map(alertsByStopResult => busActions.BusAlertByStopSuccess({data: alertsByStopResult})),
                     catchError(alertsByStopError => of(busActions.BusAlertByRouteFail({error: alertsByStopError.error})))
                 )

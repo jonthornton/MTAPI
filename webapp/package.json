@@ -25,6 +25,7 @@
     "@ngrx/effects": "^12.5.1",
     "@ngrx/store": "^12.5.1",
     "rxjs": "~7.4.0",
+    "sanitize-html": "^2.6.0",
     "tslib": "^2.3.1",
     "zone.js": "~0.11.4"
   },

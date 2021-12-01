@@ -504,7 +504,7 @@ class Mtapi(object):
             self._update()
 
         with self._read_lock:
-            out = self._stations[self._stops_to_stations[stopid]].alerts.values()
+            out = self._stations[stopid].alerts.values()
 
         return out
 
@@ -537,7 +537,7 @@ class Mtapi(object):
             self._bus_update()
 
         with self._read_lock:
-            out = self._bus_stations[self._bus_stops_to_stations[stopid]].alerts.values()
+            out = self._bus_stations[stopid].alerts.values()
 
         return out
 
