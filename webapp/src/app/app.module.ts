@@ -27,6 +27,9 @@ import {MatExpansionModule} from "@angular/material/expansion";
 import {MatDividerModule} from "@angular/material/divider";
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
+import {MatSliderModule} from "@angular/material/slider";
+import {MatRadioModule} from "@angular/material/radio";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 
 @NgModule({
   declarations: [
@@ -34,31 +37,34 @@ import { environment } from '../environments/environment';
     TrainComponent,
     BusComponent,
   ],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    StoreModule.forRoot(reducers),
-    EffectsModule.forRoot([TrainEffects, BusEffects]),
-    BrowserAnimationsModule,
-    MatTabsModule,
-    MatToolbarModule,
-    MatIconModule,
-    GoogleMapsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatOptionModule,
-    MatButtonModule,
-    FlexLayoutModule,
-    FormsModule,
-    MatExpansionModule,
-    MatDividerModule,
-    ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: environment.production,
-      // Register the ServiceWorker as soon as the app is stable
-      // or after 30 seconds (whichever comes first).
-      registrationStrategy: 'registerWhenStable:30000'
-    })
-  ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        StoreModule.forRoot(reducers),
+        EffectsModule.forRoot([TrainEffects, BusEffects]),
+        BrowserAnimationsModule,
+        MatTabsModule,
+        MatToolbarModule,
+        MatIconModule,
+        GoogleMapsModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        MatOptionModule,
+        MatButtonModule,
+        FlexLayoutModule,
+        FormsModule,
+        MatExpansionModule,
+        MatDividerModule,
+        ServiceWorkerModule.register('ngsw-worker.js', {
+            enabled: environment.production,
+            // Register the ServiceWorker as soon as the app is stable
+            // or after 30 seconds (whichever comes first).
+            registrationStrategy: 'registerWhenStable:30000'
+        }),
+        MatSliderModule,
+        MatRadioModule,
+        MatCheckboxModule
+    ],
   providers: [AsyncBusService, AsyncTrainService],
   bootstrap: [AppComponent]
 })

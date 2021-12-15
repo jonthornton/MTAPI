@@ -55,6 +55,34 @@
                     </div>
                 </div>
             </div>
+
+            <mat-expansion-panel *ngIf="selectedStation">
+                <mat-expansion-panel-header>At the station?</mat-expansion-panel-header>
+                <mat-label>Crowdedness:</mat-label>
+                <br>
+                <mat-slider aria-label="unit(s)"></mat-slider>
+                <br>
+                <mat-label>Noisiness:</mat-label>
+                <br>
+                <mat-slider aria-label="unit(s)"></mat-slider>
+                <br>
+                <mat-label>Temperature:</mat-label>
+                <br>
+                <mat-radio-group>
+                    <mat-radio-button value="1">Cold</mat-radio-button>
+                    <mat-radio-button value="2">Just Right</mat-radio-button>
+                    <mat-radio-button value="3">Hot</mat-radio-button>
+                </mat-radio-group>
+                <br>
+                <mat-checkbox>
+                    AC?
+                </mat-checkbox>
+                <br>
+                <mat-checkbox>
+                    Heating?
+                </mat-checkbox>
+            </mat-expansion-panel>
+
         </div>
 
         <div fxFlex="50%" fxFlex.xs="100%" fxFlex.sm="100%">
