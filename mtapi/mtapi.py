@@ -80,7 +80,7 @@ class Mtapi(object):
 
         # initialize the stations database
         try:
-            with open(stations_file, 'rb') as f:
+            with open(stations_file, 'r') as f:
                 self._stations = json.load(f)
                 for id in self._stations:
                     self._stations[id] = self._Station(self._stations[id])
