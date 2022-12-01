@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "mtapi"
+version = "0.1.0"
+description = "JSON proxy server for the MTA's realtime New York City subway feed"
+authors = ["Jon Thornton <thornton.jon@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/jonthornton/MTAPI"
+repository = "https://github.com/jonthornton/MTAPI.git"
+documentation = "https://github.com/jonthornton/MTAPI/tree/master/docs"
+packages = [
+  { include = "mtapi" },
+  { include =  "mtaproto" },
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.7"
+flask = "^2.2.2"
+protobuf = "^3.18.3"
+pytz = "^2022.6"
+
+
+[tool.poetry.group.dev.dependencies]
+requests = "^2.28.1"
+black = "^22.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+app = "app:main"
