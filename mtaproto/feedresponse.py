@@ -1,6 +1,7 @@
-from mtaproto import nyct_subway_pb2
-from pytz import timezone
 import datetime
+from pytz import timezone
+
+from . import nyct_subway_pb2
 
 TZ = timezone('US/Eastern')
 
