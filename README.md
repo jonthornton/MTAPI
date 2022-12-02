@@ -57,14 +57,9 @@ Standard Flask option. Will enabled enhanced logging and wildcard CORS headers.
 
 ## Generating a Stations File
 
-The MTA provides several static data files about the subway system but none include canonical information about each station. MTAPI includes a script that will parse the `stops.txt` and `transfers.txt` datasets provided by the MTA and attempt to group the different train stops into subway stations. MTAPI will use this JSON file for station names and locations. The grouping is not perfect and editing the resulting files is encouraged.
-
 Usage: 
 ```
-$ python make_stations_csv.py stops.txt transfers.txt > stations.csv
-# edit groupings in stations.csv
-$ python make_stations_json.py stations.csv > stations.json
-# edit names in stations.json
+$ python scripts/make_stations_json.py --output data/stations.json
 ```
 
 ## Help
