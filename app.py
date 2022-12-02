@@ -148,5 +148,8 @@ def _make_envelope(data):
         'updated': time
         })
 
-if __name__ == '__main__':
+
+def main():
     app.run(use_reloader=False)
+if __name__ == '__main__':
+    main()
