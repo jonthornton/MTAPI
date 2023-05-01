@@ -3,7 +3,7 @@ attrs==19.1.0
 Click==7.0
 configparser==4.0.2
 contextlib2==0.5.5
-Flask==1.1.1
+Flask==2.3.2
 funcsigs==1.0.2
 importlib-metadata==0.22
 itsdangerous==1.1.0
