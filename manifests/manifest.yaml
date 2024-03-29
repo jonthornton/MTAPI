@@ -34,8 +34,8 @@ spec:
           image: ghcr.io/asg0451/mtapi:latest
           resources:
             limits:
-              memory: "128Mi"
-              cpu: "500m"
+              memory: "1Gi"
+              cpu: "1"
           ports:
             - containerPort: 8000
           volumeMounts:
