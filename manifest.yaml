@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mtapi-config
+data:
+  settings.cfg: |
+    MTA_KEY = 'i-dont-think-this-requires-a-key-but-whatever'
+    STATIONS_FILE = './data/stations.json'
+    CROSS_ORIGIN = '*'
+    MAX_TRAINS=10
+    MAX_MINUTES=30
+    CACHE_SECONDS=60
+    THREADED=True
+    DEBUG=False
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mtapi
+spec:
+  selector:
+    matchLabels:
+      app: mtapi
+  template:
+    metadata:
+      labels:
+        app: mtapi
+    spec:
+      containers:
+        - name: mtapi
+          image: ghcr.io/asg0451/mtapi:latest
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: mtapi-config
+              mountPath: /config
+      volumes:
+        - name: mtapi-config
+          configMap:
+            name: mtapi-config
