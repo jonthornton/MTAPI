@@ -32,6 +32,9 @@ spec:
       containers:
         - name: mtapi
           image: ghcr.io/asg0451/mtapi:latest
+          env:
+            - name: WEB_CONCURRENCY
+              value: "4"
           resources:
             limits:
               memory: "1Gi"
