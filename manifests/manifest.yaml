@@ -27,8 +27,6 @@ spec:
       labels:
         app: mtapi
     spec:
-      nodeSelector:
-        kubernetes.io/arch: amd64
       containers:
         - name: mtapi
           image: ghcr.io/asg0451/mtapi:latest
