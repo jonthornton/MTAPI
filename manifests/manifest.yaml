@@ -34,9 +34,12 @@ spec:
             - name: WEB_CONCURRENCY
               value: "4"
           resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
             limits:
               memory: "1Gi"
-              cpu: "1"
+              cpu: "2"
           ports:
             - containerPort: 8000
           volumeMounts:
