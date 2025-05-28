@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Subway Real-Time Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>NYC Subway Real-Time Map</h1>
+            <div id="controls">
+                <button id="refresh-btn">Refresh Data</button>
+                <span id="last-updated">Loading...</span>
+            </div>
+        </header>
+        
+        <main>
+            <div id="map"></div>
+            <aside id="sidebar">
+                <h2>Train Information</h2>
+                <div id="train-list-container">
+                    <p id="loading-message">Loading train data...</p>
+                    <div id="train-list"></div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="map.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

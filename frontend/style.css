@@ -1,0 +1,174 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: #0039A6;
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h1 {
+    font-size: 1.5rem;
+}
+
+#controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#refresh-btn {
+    background-color: white;
+    color: #0039A6;
+    border: 1px solid #0039A6;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#refresh-btn:hover {
+    background-color: #002d7a;
+    color: white;
+}
+
+#refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#last-updated {
+    font-size: 0.9rem;
+}
+
+main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+#map {
+    flex: 3;
+    background-color: #e0e0e0;
+    height: 100%;
+}
+
+#sidebar {
+    flex: 1;
+    min-width: 250px;
+    max-width: 350px;
+    background-color: white;
+    padding: 1rem;
+    overflow-y: auto;
+    box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar h2 {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+#train-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.train-item {
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-left: 5px solid;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.train-line-icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.train-details p {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0;
+}
+
+/* Subway line colors */
+.line-1, .line-2, .line-3 { background-color: #EE352E; }
+.line-4, .line-5, .line-6 { background-color: #00933C; }
+.line-7 { background-color: #B933AD; }
+.line-A, .line-C, .line-E { background-color: #0039A6; }
+.line-B, .line-D, .line-F, .line-M { background-color: #FF6319; }
+.line-G { background-color: #6CBE45; }
+.line-J, .line-Z { background-color: #996633; }
+.line-L { background-color: #A7A9AC; }
+.line-N, .line-Q, .line-R, .line-W { background-color: #FCCC0A; color: #000000 !important; }
+.line-S, .line-GS, .line-FS, .line-H { background-color: #808183; }
+.line-SI { background-color: #0039A6; }
+
+#loading-message {
+    text-align: center;
+    padding: 1rem;
+    color: #777;
+}
+
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+    }
+    
+    #map {
+        height: 60vh;
+        flex: none;
+    }
+    
+    #sidebar {
+        max-width: none;
+        height: 40vh;
+        flex: none;
+    }
+    
+    header {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    #controls {
+        justify-content: center;
+    }
+}
