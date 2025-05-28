@@ -1,87 +1,149 @@
-# MTA Realtime API JSON Proxy
+# NYC Subway Real-Time Map
 
-MTAPI is a small HTTP server that converts the [MTA's realtime subway feed](https://api.mta.info/#/landing) from [Protocol Buffers/GTFS](https://developers.google.com/transit/gtfs/) to JSON. The app also adds caching and makes it possible to retrieve information by location and train line. 
+A modern web application that displays real-time NYC subway train locations using the MTA's GTFS-realtime feeds.
 
-## Active Development
+## Features
 
-This project is under active development and any part of the API may change. Feedback is very welcome.
+- 🚇 Real-time train data from all MTA subway lines
+- 🗺️ Interactive map showing train locations
+- 📱 Responsive design for mobile and desktop
+- 🔄 Auto-refresh every 30 seconds
+- 🎨 Color-coded subway lines
+- ⚡ No API key required (uses free MTA feeds)
 
-## Running the server
+## Quick Start
 
-MTAPI is a Flask app designed to run under Python 3.3+.
+### Prerequisites
+- Node.js (version 14 or higher)
+- npm or yarn
 
-1. Create a `settings.cfg` file. A sample is provided as `settings.cfg.sample`.
-2. Set up your environment and install dependencies.  
-`$ python3 -m venv .venv`  
-`$ source .venv/bin/activate`  
-`$ python3 -m pip install -r requirements.txt`
-3. Run the server  
-`$ python app.py`
+### Installation
 
-If your configuration is named something other than `settings.cfg`, set the `MTAPI_SETTINGS` env variable to your configuration path.
-
-This app makes use of Python threads. If running under uWSGI include the --enable-threads flag.
-
-## Endpoints
-
-[Endpoints to retrieve train data and sample input and output are listed here.](https://github.com/jonthornton/MTAPI/tree/master/docs/endpoints.md)
-
-## Settings
-
-- **MTA_KEY** (required)  
-The API key provided at hhttps://api.mta.info/#/signup
-*default: None*
-
-- **STATIONS_FILE** (required)  
-Path to the JSON file containing station information. See [Generating a Stations File](#generating-a-stations-file) for more info.  
-*default: None*
-
-- **CROSS_ORIGIN**    
-Add [CORS](http://enable-cors.org/) headers to the HTTP output.  
-*default: "&#42;" when in debug mode, None otherwise*
-
-- **MAX_TRAINS**  
-Limits the number of trains that will be listed for each station.  
-*default: 10*
-
-- **MAX_MINUTES**  
-Limits how far in advance train information will be listed.  
-*default: 30*
-
-- **CACHE_SECONDS**  
-How frequently the app will request fresh data from the MTA API.  
-*default: 60*
-
-- **THREADED**  
-Enable background data refresh. This will prevent requests from hanging while new data is retreived from the MTA API.  
-*default: True*
-
-- **DEBUG**  
-Standard Flask option. Will enabled enhanced logging and wildcard CORS headers.  
-*default: False*
-
-## Generating a Stations File
-
-The MTA provides several static data files about the subway system but none include canonical information about each station. MTAPI includes a script that will parse the `stops.txt` and `transfers.txt` datasets provided by the MTA and attempt to group the different train stops into subway stations. MTAPI will use this JSON file for station names and locations. The grouping is not perfect and editing the resulting files is encouraged.
-
-Usage: 
-```
-$ python make_stations_csv.py stops.txt transfers.txt > stations.csv
-# edit groupings in stations.csv
-$ python make_stations_json.py stations.csv > stations.json
-# edit names in stations.json
+1. Clone the repository:
+```bash
+git clone https://github.com/dantraynor/subwaymap.git
+cd subwaymap
 ```
 
-## Help
+2. Switch to the new branch:
+```bash
+git checkout feature/nodejs-realtime-website
+```
 
-Submit a [GitHub Issues request](https://github.com/jonthornton/MTAPI/issues). 
+3. Install backend dependencies:
+```bash
+cd backend
+npm install
+```
 
-## Projects
+4. Start the development server:
+```bash
+npm run dev
+```
 
-Here are some projects that use MTAPI.
+5. Open your browser and go to:
+```
+http://localhost:3000
+```
 
-* http://wheresthefuckingtrain.com
+## Project Structure
+
+```
+subwaymap/
+├── backend/
+│   ├── api/
+│   │   └── mta.js          # MTA API routes
+│   ├── package.json        # Backend dependencies
+│   └── server.js           # Express server
+├── frontend/
+│   ├── index.html          # Main HTML file
+│   ├── style.css           # Styling
+│   ├── script.js           # Main app logic
+│   └── map.js              # Map functionality
+├── .gitignore
+└── README.md
+```
+
+## API Endpoints
+
+- `GET /api/mta/feeds/all` - Get all real-time train data
+- `GET /api/mta/feed/:feedId` - Get specific feed data
+
+Available feed IDs:
+- `1234567` - Lines 1,2,3,4,5,6,7
+- `ace` - Lines A,C,E
+- `bdfm` - Lines B,D,F,M
+- `g` - Line G
+- `jz` - Lines J,Z
+- `l` - Line L
+- `nqrw` - Lines N,Q,R,W
+- `si` - Staten Island Railway
+
+## Development
+
+### Running in Development Mode
+```bash
+cd backend
+npm run dev
+```
+
+This uses `nodemon` to automatically restart the server when files change.
+
+### Adding More Stations
+
+The map currently shows a limited set of stations. To add more:
+
+1. Download the MTA's GTFS static data from: https://new.mta.info/developers
+2. Extract station coordinates from `stops.txt`
+3. Add them to the `STATION_COORDINATES_DATA` object in `frontend/map.js`
+
+## Deployment
+
+### Production Build
+```bash
+cd backend
+npm start
+```
+
+### Environment Variables
+Create a `.env` file in the root directory if needed:
+```
+PORT=3000
+NODE_ENV=production
+```
+
+## Technologies Used
+
+- **Backend**: Node.js, Express.js
+- **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Map**: Leaflet.js
+- **Data**: MTA GTFS-realtime feeds
+- **Protocol Buffers**: gtfs-realtime-bindings
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
 ## License
 
-The project is made available under the MIT license.
+MIT License - see LICENSE file for details
+
+## Data Sources
+
+- Real-time data: [MTA GTFS-realtime feeds](https://api.mta.info/#/subwayRealTimeFeeds)
+- Static data: [MTA GTFS static feeds](https://new.mta.info/developers)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **No train data showing**: Check the browser console for API errors
+2. **Map not loading**: Ensure you have an internet connection for map tiles
+3. **Server won't start**: Make sure port 3000 is available
+
+### API Rate Limits
+
+The MTA feeds are free but may have rate limits. The app refreshes every 30 seconds which should be well within limits.
