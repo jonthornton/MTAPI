@@ -6,12 +6,19 @@ class SubwayMapApp {
         this.lastUpdated = null;
         this.mapInstance = null;
         this.isFetching = false;
+        this.errorCount = 0;
+        this.maxErrors = 3;
         this.init();
     }
 
     async init() {
         this.mapInstance = initLeafletMap('map');
         this.setupEventListeners();
+        
+        // Test API connectivity first
+        await this.testAPI();
+        
+        // Then fetch data
         await this.fetchData();
         this.startAutoRefresh();
     }
@@ -22,6 +29,23 @@ class SubwayMapApp {
                  this.fetchData();
             }
         });
+    }
+
+    async testAPI() {
+        try {
+            console.log('Testing API connectivity...');
+            const response = await fetch(`${API_BASE_URL}/test`);
+            const result = await response.json();
+            console.log('API test result:', result);
+            
+            if (result.status === 'success') {
+                console.log('✅ API connectivity confirmed');
+            } else {
+                console.warn('⚠️ API test failed:', result);
+            }
+        } catch (error) {
+            console.error('❌ API test error:', error);
+        }
     }
 
     async fetchData() {
@@ -39,30 +63,67 @@ class SubwayMapApp {
         document.getElementById('train-list').innerHTML = '';
 
         try {
-            const response = await fetch(`${API_BASE_URL}/feeds/all`);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Failed to fetch data: ${response.status} ${errorData.error || ''}`);
-            }
-            const rawData = await response.json();
+            console.log('Fetching train data...');
+            const response = await fetch(`${API_BASE_URL}/feeds/all`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
             
-            this.allTrainData = rawData
-                .filter(feed => feed.data && !feed.error)
-                .flatMap(feed => feed.data);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('Received data:', data);
+            
+            if (data.feeds && Array.isArray(data.feeds)) {
+                this.allTrainData = data.feeds.flatMap(feed => feed.data || []);
+                console.log(`Processed ${this.allTrainData.length} total train updates`);
+            } else {
+                console.warn('Unexpected data format:', data);
+                this.allTrainData = [];
+            }
 
             this.lastUpdated = new Date();
+            this.errorCount = 0; // Reset error count on success
             this.updateUI();
+            
             if (window.updateMapWithTrainLocations) {
                 window.updateMapWithTrainLocations(this.allTrainData, this.getLineColor.bind(this));
             }
+            
         } catch (error) {
             console.error('Error fetching data:', error);
-            lastUpdatedEl.textContent = `Error: ${error.message}`;
-            loadingMessageEl.textContent = `Failed to load train data. ${error.message}`;
+            this.errorCount++;
+            
+            let errorMessage = 'Failed to load train data.';
+            
+            if (error.message.includes('CORS')) {
+                errorMessage = 'CORS error: Try refreshing the page or check your connection.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error: Check your internet connection.';
+            } else if (error.message.includes('HTTP 5')) {
+                errorMessage = 'Server error: The MTA service may be temporarily unavailable.';
+            } else {
+                errorMessage = `Error: ${error.message}`;
+            }
+            
+            lastUpdatedEl.textContent = errorMessage;
+            loadingMessageEl.textContent = errorMessage;
+            
+            // Show retry message if multiple errors
+            if (this.errorCount >= this.maxErrors) {
+                loadingMessageEl.textContent += ' Will retry automatically in 60 seconds.';
+            }
+            
         } finally {
             this.isFetching = false;
             refreshBtn.disabled = false;
             refreshBtn.textContent = 'Refresh Data';
+            
             if (this.allTrainData.length > 0) {
                 loadingMessageEl.style.display = 'none';
             }
@@ -83,8 +144,8 @@ class SubwayMapApp {
         trainListEl.innerHTML = '';
         
         if (this.allTrainData.length === 0 && !this.isFetching) {
-             if (!loadingMessageEl.textContent.startsWith("Failed")) {
-                loadingMessageEl.textContent = 'No active train data found or all feeds failed.';
+             if (!loadingMessageEl.textContent.includes('Error') && !loadingMessageEl.textContent.includes('Failed')) {
+                loadingMessageEl.textContent = 'No active train data available. The MTA feeds may be temporarily unavailable.';
              }
              loadingMessageEl.style.display = 'block';
              return;
@@ -94,14 +155,26 @@ class SubwayMapApp {
 
         const trainsByRoute = {};
         this.allTrainData.forEach(train => {
-            if (!trainsByRoute[train.routeId]) {
+            if (train.routeId && !trainsByRoute[train.routeId]) {
                 trainsByRoute[train.routeId] = [];
             }
-            trainsByRoute[train.routeId].push(train);
+            if (train.routeId) {
+                trainsByRoute[train.routeId].push(train);
+            }
         });
         
-        Object.entries(trainsByRoute).sort(([routeA], [routeB]) => routeA.localeCompare(routeB)).forEach(([routeId, trains]) => {
-            if (!routeId) return;
+        const sortedRoutes = Object.entries(trainsByRoute).sort(([routeA], [routeB]) => {
+            // Custom sort: numbers first, then letters
+            const aIsNumber = /^\d/.test(routeA);
+            const bIsNumber = /^\d/.test(routeB);
+            
+            if (aIsNumber && !bIsNumber) return -1;
+            if (!aIsNumber && bIsNumber) return 1;
+            
+            return routeA.localeCompare(routeB);
+        });
+        
+        sortedRoutes.forEach(([routeId, trains]) => {
             const routeEl = document.createElement('div');
             routeEl.className = 'train-item';
             routeEl.style.borderLeftColor = this.getLineColor(routeId);
@@ -112,11 +185,21 @@ class SubwayMapApp {
                 <span class="train-line-icon line-${sanitizedRouteId}">${routeId}</span>
                 <div class="train-details">
                     <strong>Route ${routeId}</strong>
-                    <p>${trains.length} trip update(s)</p>
+                    <p>${trains.length} active train(s)</p>
                 </div>
             `;
             trainListEl.appendChild(routeEl);
         });
+        
+        // Add summary info
+        const summaryEl = document.createElement('div');
+        summaryEl.className = 'summary-info';
+        summaryEl.innerHTML = `
+            <div style="margin-top: 1rem; padding: 0.5rem; background: #f0f8ff; border-radius: 4px; font-size: 0.9rem; color: #666;">
+                <strong>Total:</strong> ${Object.keys(trainsByRoute).length} routes, ${this.allTrainData.length} trains
+            </div>
+        `;
+        trainListEl.appendChild(summaryEl);
     }
 
     getLineColor(line) {
@@ -140,12 +223,14 @@ class SubwayMapApp {
     startAutoRefresh() {
         setInterval(() => {
             if (!this.isFetching) {
-                 this.fetchData();
+                console.log('Auto-refreshing data...');
+                this.fetchData();
             }
-        }, 30000);
+        }, 30000); // Refresh every 30 seconds
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚇 NYC Subway Map starting...');
     new SubwayMapApp();
 });
