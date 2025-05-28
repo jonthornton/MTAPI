@@ -1,0 +1,40 @@
+{
+  "name": "nyc-subway-realtime-map",
+  "version": "1.0.0",
+  "description": "Real-time NYC Subway Map using MTA GTFS feeds",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "install-backend": "cd backend && npm install",
+    "postinstall": "npm run install-backend"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "gtfs-realtime-bindings": "^1.1.1",
+    "node-fetch": "^2.6.9"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "keywords": [
+    "subway",
+    "mta",
+    "realtime",
+    "nyc",
+    "transit",
+    "gtfs"
+  ],
+  "author": "Dan Traynor",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dantraynor/subwaymap.git"
+  }
+}
