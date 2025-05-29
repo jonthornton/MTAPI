@@ -22,5 +22,5 @@ pytz==2019.2
 scandir==1.10.0
 six==1.16.0
 wcwidth==0.1.7
-Werkzeug==3.0.1
+Werkzeug==3.0.6
 zipp==0.6.0
