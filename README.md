@@ -28,10 +28,6 @@ This app makes use of Python threads. If running under uWSGI include the --enabl
 
 ## Settings
 
-- **MTA_KEY** (required)  
-The API key provided at hhttps://api.mta.info/#/signup
-*default: None*
-
 - **STATIONS_FILE** (required)  
 Path to the JSON file containing station information. See [Generating a Stations File](#generating-a-stations-file) for more info.  
 *default: None*
@@ -53,7 +49,7 @@ How frequently the app will request fresh data from the MTA API.
 *default: 60*
 
 - **THREADED**  
-Enable background data refresh. This will prevent requests from hanging while new data is retreived from the MTA API.  
+Enable background data refresh. This will prevent requests from hanging while new data is retrieved from the MTA API.  
 *default: True*
 
 - **DEBUG**  

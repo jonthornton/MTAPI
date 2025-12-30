@@ -67,8 +67,7 @@ class Mtapi(object):
         'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g'  # G
     ]
 
-    def __init__(self, key, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
-        self._KEY = key
+    def __init__(self, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
         self._EXPIRES_SECONDS = expires_seconds
@@ -108,7 +107,6 @@ class Mtapi(object):
     def _load_mta_feed(self, feed_url):
         try:
             request = urllib.request.Request(feed_url)
-            request.add_header('x-api-key', self._KEY)
             with contextlib.closing(urllib.request.urlopen(request)) as r:
                 data = r.read()
                 return FeedResponse(data)
