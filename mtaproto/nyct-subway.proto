@@ -4,7 +4,7 @@
 option java_package = "com.google.transit.realtime"; 
 
 import "gtfs-realtime.proto";
-  
+	
 message TripReplacementPeriod {
   // The replacement period is for this route
   optional string route_id = 1;

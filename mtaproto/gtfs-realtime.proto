@@ -23,8 +23,10 @@
 // https://github.com/google/transit/tree/master/gtfs-realtime
 
 syntax = "proto2";
-option java_package = "com.google.transit.realtime";
+
 package transit_realtime;
+
+option java_package = "com.google.transit.realtime";
 
 // The contents of a feed message.
 // A feed is a continuous stream of feed messages. Each message in the stream is
@@ -362,7 +364,6 @@ message VehiclePosition {
 
     // The vehicle is not accepting additional passengers.
     NOT_ACCEPTING_PASSENGERS = 6;
-
   }
   optional OccupancyStatus occupancy_status = 9;
 
@@ -385,10 +386,10 @@ message Alert {
   // Cause of this alert.
   enum Cause {
     UNKNOWN_CAUSE = 1;
-    OTHER_CAUSE = 2;        // Not machine-representable.
+    OTHER_CAUSE = 2;  // Not machine-representable.
     TECHNICAL_PROBLEM = 3;
-    STRIKE = 4;             // Public transit agency employees stopped working.
-    DEMONSTRATION = 5;      // People are blocking the streets.
+    STRIKE = 4;         // Public transit agency employees stopped working.
+    DEMONSTRATION = 5;  // People are blocking the streets.
     ACCIDENT = 6;
     HOLIDAY = 7;
     WEATHER = 8;
@@ -511,7 +512,7 @@ message TripDescriptor {
   // The initially scheduled start time of this trip instance.
   // When the trip_id corresponds to a non-frequency-based trip, this field
   // should either be omitted or be equal to the value in the GTFS feed. When
-  // the trip_id correponds to a frequency-based trip, the start_time must be
+  // the trip_id corresponds to a frequency-based trip, the start_time must be
   // specified for trip updates and vehicle positions. If the trip corresponds
   // to exact_times=1 GTFS record, then start_time must be some multiple
   // (including zero) of headway_secs later than frequencies.txt start_time for
