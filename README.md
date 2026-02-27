@@ -56,6 +56,10 @@ Enable background data refresh. This will prevent requests from hanging while ne
 Standard Flask option. Will enabled enhanced logging and wildcard CORS headers.  
 *default: False*
 
+- **SERVICE_ALERTS**
+Enable additional service alert information from the MTA's feed.  
+*default: False*
+
 ## Generating a Stations File
 
 The MTA provides several static data files about the subway system but none include canonical information about each station. MTAPI includes a script that will parse the `stops.txt` and `transfers.txt` datasets provided by the MTA and attempt to group the different train stops into subway stations. MTAPI will use this JSON file for station names and locations. The grouping is not perfect and editing the resulting files is encouraged.

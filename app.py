@@ -22,7 +22,8 @@ app.config.update(
     MAX_TRAINS=10,
     MAX_MINUTES=30,
     CACHE_SECONDS=60,
-    THREADED=True
+    THREADED=True,
+    SERVICE_ALERTS=False
 )
 
 _SETTINGS_ENV_VAR = 'MTAPI_SETTINGS'
@@ -56,7 +57,8 @@ mta = Mtapi(
     max_trains=app.config['MAX_TRAINS'],
     max_minutes=app.config['MAX_MINUTES'],
     expires_seconds=app.config['CACHE_SECONDS'],
-    threaded=app.config['THREADED'])
+    threaded=app.config['THREADED'],
+    service_alerts=app.config['SERVICE_ALERTS'])
 
 def response_wrapper(f):
     @wraps(f)
