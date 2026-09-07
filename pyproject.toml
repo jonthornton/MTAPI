@@ -13,6 +13,9 @@ dependencies = [
 dev = [
     "pytest==8.3.5",
 ]
+deploy = [
+    "gunicorn==26.2.0",
+]
 
 [tool.uv]
 package = false
