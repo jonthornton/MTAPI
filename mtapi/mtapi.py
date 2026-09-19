@@ -189,6 +189,21 @@ class Mtapi(object):
 
         return list(islice(serialized_stations, limit))
 
+    def get_stations(self):
+        if self.is_expired():
+            self._update()
+
+        with self._read_lock:
+            out = [{
+                'id': station['id'],
+                'name': station['name'],
+                'location': station['location'],
+                'routes': sorted(station.routes)
+            } for station in self._stations.values()]
+
+        out.sort(key=itemgetter('name'))
+        return out
+
     def get_routes(self):
         return self._routes.keys()
 

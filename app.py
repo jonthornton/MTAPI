@@ -146,6 +146,14 @@ def by_index(id_string):
 
         return add_cors_header(resp)
 
+@app.route('/stations', methods=['GET'])
+@response_wrapper
+def stations():
+    return {
+        'data': mta.get_stations(),
+        'updated': mta.last_update()
+        }
+
 @app.route('/routes', methods=['GET'])
 @response_wrapper
 def routes():

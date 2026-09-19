@@ -221,3 +221,35 @@ Lists available routes.
     "updated": "2014-08-29T15:09:57-04:00"
 }
 ```
+- **/stations**  
+Lists every station in the stations file, sorted by name. Takes no arguments and is not paginated. `routes` reflects the routes with trains currently in the realtime feed (trains arriving in the next 30 minutes), so it may be empty for a station with no upcoming service.
+```javascript
+{
+    "data": [
+        {
+            "id": "L06",
+            "location": [
+                40.730953,
+                -73.981628
+            ],
+            "name": "1 Av",
+            "routes": [
+                "L"
+            ]
+        },
+        {
+            "id": "119",
+            "location": [
+                40.799446,
+                -73.968379
+            ],
+            "name": "103 St",
+            "routes": [
+                "1"
+            ]
+        },
+        ...
+    ],
+    "updated": "2014-08-29T15:09:57-04:00"
+}
+```
