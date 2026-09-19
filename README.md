@@ -8,19 +8,25 @@ This project is under active development and any part of the API may change. Fee
 
 ## Running the server
 
-MTAPI is a Flask app designed to run under Python 3.3+.
+MTAPI is a Flask app designed to run under Python 3.12+. Dependencies are managed with [uv](https://docs.astral.sh/uv/).
 
 1. Create a `settings.cfg` file. A sample is provided as `settings.cfg.sample`.
-2. Set up your environment and install dependencies.  
-`$ python3 -m venv .venv`  
-`$ source .venv/bin/activate`  
-`$ python3 -m pip install -r requirements.txt`
+2. Install dependencies. uv will create a virtual environment and install the pinned versions from `uv.lock`.  
+`$ uv sync`  
+To include the test dependencies, use `uv sync --group dev` instead.
 3. Run the server  
-`$ python app.py`
+`$ uv run python app.py`
 
 If your configuration is named something other than `settings.cfg`, set the `MTAPI_SETTINGS` env variable to your configuration path.
 
-This app makes use of Python threads. If running under uWSGI include the --enable-threads flag.
+For deployment, install the `deploy` dependency group and run the app under [gunicorn](https://gunicorn.org/):
+
+```
+$ uv sync --group deploy
+$ uv run gunicorn app:app
+```
+
+This app makes use of Python threads to refresh data in the background. Each gunicorn worker maintains its own cache and refresh thread, so running multiple workers multiplies the number of requests made to the MTA API. If running under uWSGI instead, include the --enable-threads flag.
 
 ## Endpoints
 
@@ -62,9 +68,9 @@ The MTA provides several static data files about the subway system but none incl
 
 Usage: 
 ```
-$ python make_stations_csv.py stops.txt transfers.txt > stations.csv
+$ uv run python scripts/make_stations_csv.py stops.txt transfers.txt > stations.csv
 # edit groupings in stations.csv
-$ python make_stations_json.py stations.csv > stations.json
+$ uv run python scripts/make_stations_json.py stations.csv > stations.json
 # edit names in stations.json
 ```
 
