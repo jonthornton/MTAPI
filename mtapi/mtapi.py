@@ -23,6 +23,7 @@ class Mtapi(object):
             self.json = json
             self.trains = {}
             self.clear_train_data()
+            self.alerts = []
 
         def __getitem__(self, key):
             return self.json[key]
@@ -34,12 +35,21 @@ class Mtapi(object):
                 'time': train_time
             })
             self.last_update = feed_time
+        
+        def add_alert(self, alert_type, alert_text):
+            # Only add alerts once
+            if not any(a['header_text'] == alert_text for a in self.alerts):
+                self.alerts.append({
+                    'type': alert_type,
+                    'header_text': alert_text
+                })
 
         def clear_train_data(self):
             self.trains['N'] = []
             self.trains['S'] = []
             self.routes = set()
             self.last_update = None
+            self.alerts = []
 
         def sort_trains(self, max_trains):
             self.trains['S'] = sorted(self.trains['S'], key=itemgetter('time'))[:max_trains]
@@ -52,6 +62,8 @@ class Mtapi(object):
                 'routes': self.routes,
                 'last_update': self.last_update
             }
+            if self.alerts:
+                out['service_alerts'] = self.alerts # Only add service alerts if they exist
             out.update(self.json)
             return out
 
@@ -67,11 +79,15 @@ class Mtapi(object):
         'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g'  # G
     ]
 
-    def __init__(self, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False):
+    # GTFS feed for subway service alerts
+    _SERVICE_ALERT_URL = 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts'
+
+    def __init__(self, stations_file, expires_seconds=60, max_trains=10, max_minutes=30, threaded=False, service_alerts=False):
         self._MAX_TRAINS = max_trains
         self._MAX_MINUTES = max_minutes
         self._EXPIRES_SECONDS = expires_seconds
         self._THREADED = threaded
+        self._GET_SERVICE_ALERTS = service_alerts
         self._stations = {}
         self._stops_to_stations = {}
         self._routes = {}
@@ -114,6 +130,42 @@ class Mtapi(object):
         except (urllib.error.URLError, google.protobuf.message.DecodeError, ConnectionResetError) as e:
             logger.error('Couldn\'t connect to MTA server: ' + str(e))
             return False
+        
+    def _is_alert_currently_active(self, entity, current_timestamp: int):
+        for period in entity.alert.active_period:
+            # Alert is active if current time is within the period
+            if period.start <= current_timestamp and (not period.end or period.end >= current_timestamp):
+                return True
+        return False
+    
+    def _get_alert_text(self, entity, language='en'):
+        # Fall back to 'en' when language isn't available.
+        # This is needed for elevator alerts, some text is 
+        # better than no text in this case.
+        english_text = None
+        for translation in entity.alert.header_text.translation:
+            if translation.language == language:
+                return translation.text
+            elif translation.language == 'en':
+                english_text = translation.text 
+        return english_text
+            
+    def _get_station_routes(self, station):
+        return {
+            train['route'] 
+            for direction in station.trains.values() 
+            for train in direction
+        }
+    
+    def _alert_applies_to_stop(self, informed, station_stops):
+        if not informed.HasField('stop_id'):
+            return False
+        
+        # Check both with and without direction suffix (N/S)
+        alert_stop = informed.stop_id
+        alert_stop_base = alert_stop.rstrip('NS')
+        
+        return any(stop in [alert_stop, alert_stop_base] for stop in station_stops)
 
     def _update(self):
         logger.info('updating...')
@@ -127,6 +179,20 @@ class Mtapi(object):
             stations[id].clear_train_data()
 
         routes = defaultdict(set)
+
+        # Get service alerts
+        service_alerts = []
+        if self._GET_SERVICE_ALERTS:
+            logger.info('fetching service alerts...')
+            service_alerts_feed = self._load_mta_feed(self._SERVICE_ALERT_URL)
+
+            if service_alerts_feed:
+                # Filter for active alerts
+                current_timestamp = int(self._last_update.timestamp())
+                service_alerts = [
+                    entity for entity in service_alerts_feed.entity
+                    if self._is_alert_currently_active(entity, current_timestamp)
+                ]
 
         for i, feed_url in enumerate(self._FEED_URLS):
             mta_data = self._load_mta_feed(feed_url)
@@ -169,6 +235,27 @@ class Mtapi(object):
         # sort by time
         for id in stations:
             stations[id].sort_trains(self._MAX_TRAINS)
+
+        # Add service alerts to stations
+        if self._GET_SERVICE_ALERTS and service_alerts:
+            for station_id, station in stations.items():
+                station_routes = self._get_station_routes(station)
+
+                for alert_entity in service_alerts:
+                    alert_text = self._get_alert_text(alert_entity, 'en-html')
+                    if not alert_text:
+                        continue
+
+                    for informed in alert_entity.alert.informed_entity:
+                        # Check if alert applies to this specific stop
+                        if self._alert_applies_to_stop(informed, station['stops']):
+                            station.add_alert('stop', alert_text)
+                            break # Only add once per alert per station
+
+                        # Check if alert applies to a route serving the station
+                        if informed.HasField('route_id') and informed.route_id in station_routes:
+                            station.add_alert('route', alert_text)
+                            break # Only add once per alert per station
 
         with self._read_lock:
             self._routes = routes
