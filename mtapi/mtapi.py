@@ -1,5 +1,5 @@
 import urllib, contextlib, datetime, copy
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from itertools import islice
 from operator import itemgetter
 import csv, math, json
@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+
+# optional per-request filters for the train lists in serialized stations
+TrainFilter = namedtuple('TrainFilter', ['route_ids', 'direction', 'max_trains'],
+                         defaults=(None, None, None))
 
 class Mtapi(object):
 
@@ -41,19 +45,26 @@ class Mtapi(object):
             self.routes = set()
             self.last_update = None
 
-        def sort_trains(self, max_trains):
-            self.trains['S'] = sorted(self.trains['S'], key=itemgetter('time'))[:max_trains]
-            self.trains['N'] = sorted(self.trains['N'], key=itemgetter('time'))[:max_trains]
+        def sort_trains(self):
+            self.trains['S'] = sorted(self.trains['S'], key=itemgetter('time'))
+            self.trains['N'] = sorted(self.trains['N'], key=itemgetter('time'))
 
-        def serialize(self):
+        def serialize(self, max_trains, route_ids=None, direction=None):
             out = {
-                'N': self.trains['N'],
-                'S': self.trains['S'],
+                'N': [] if direction == 'S' else self._filter_trains('N', max_trains, route_ids),
+                'S': [] if direction == 'N' else self._filter_trains('S', max_trains, route_ids),
                 'routes': self.routes,
                 'last_update': self.last_update
             }
             out.update(self.json)
             return out
+
+        def _filter_trains(self, direction, max_trains, route_ids):
+            trains = self.trains[direction]
+            if route_ids is not None:
+                trains = [t for t in trains if t['route'] in route_ids]
+            # filter before truncating, so other routes can't crowd out the requested ones
+            return trains[:max_trains]
 
 
     _FEED_URLS = [
@@ -168,7 +179,7 @@ class Mtapi(object):
 
         # sort by time
         for id in stations:
-            stations[id].sort_trains(self._MAX_TRAINS)
+            stations[id].sort_trains()
 
         with self._read_lock:
             self._routes = routes
@@ -177,7 +188,12 @@ class Mtapi(object):
     def last_update(self):
         return self._last_update
 
-    def get_by_point(self, point, limit=5):
+    def _serialize_station(self, station, train_filter=None):
+        f = train_filter or TrainFilter()
+        max_trains = self._MAX_TRAINS if f.max_trains is None else min(f.max_trains, self._MAX_TRAINS)
+        return station.serialize(max_trains, route_ids=f.route_ids, direction=f.direction)
+
+    def get_by_point(self, point, limit=5, train_filter=None):
         if self.is_expired():
             self._update()
 
@@ -185,7 +201,7 @@ class Mtapi(object):
             sortable_stations = copy.deepcopy(self._stations).values()
 
         sorted_stations = sorted(sortable_stations, key=lambda s: distance(s['location'], point))
-        serialized_stations = map(lambda s: s.serialize(), sorted_stations)
+        serialized_stations = map(lambda s: self._serialize_station(s, train_filter), sorted_stations)
 
         return list(islice(serialized_stations, limit))
 
@@ -207,24 +223,24 @@ class Mtapi(object):
     def get_routes(self):
         return self._routes.keys()
 
-    def get_by_route(self, route):
+    def get_by_route(self, route, train_filter=None):
         route = route.upper()
 
         if self.is_expired():
             self._update()
 
         with self._read_lock:
-            out = [ self._stations[self._stops_to_stations[k]].serialize() for k in self._routes[route] ]
+            out = [ self._serialize_station(self._stations[self._stops_to_stations[k]], train_filter) for k in self._routes[route] ]
 
         out.sort(key=lambda x: x['name'])
         return out
 
-    def get_by_id(self, ids):
+    def get_by_id(self, ids, train_filter=None):
         if self.is_expired():
             self._update()
 
         with self._read_lock:
-            out = [ self._stations[k].serialize() for k in ids ]
+            out = [ self._serialize_station(self._stations[k], train_filter) for k in ids ]
 
         return out
 

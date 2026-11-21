@@ -253,3 +253,19 @@ Lists every station in the stations file, sorted by name. Takes no arguments and
     "updated": "2014-08-29T15:09:57-04:00"
 }
 ```
+
+## Train filters
+
+`/by-location`, `/by-route` and `/by-id` accept optional query parameters that filter the train lists of the stations they return. The path (or `lat`/`lon`) selects the stations; these parameters only filter their trains.
+
+- `routes=[route],[route]...` keeps only trains on these routes.
+- `dir=N` or `dir=S` keeps only that direction; the other direction's list is returned empty.
+- `max_trains=[n]` returns at most `n` trains per direction, up to the server's `MAX_TRAINS` setting.
+
+Parameter values are case-insensitive. Parameters can be combined and are ignored when empty; without them, responses are unchanged. Filters are applied before `max_trains`, and each station's `routes` field is not filtered. An invalid `dir` or `max_trains` returns a 400 error.
+
+Filtering by route can hide trains running in place of that route during service changes.
+
+Examples:
+- `/by-id/A17,118?routes=1,A,C&dir=N&max_trains=3`
+- `/by-route/A?routes=A&dir=S`

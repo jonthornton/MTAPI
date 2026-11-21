@@ -9,7 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from mtapi.mtapi import Mtapi
+from mtapi.mtapi import Mtapi, TrainFilter
 from flask import Flask, request, Response, render_template, abort, redirect
 import json
 from datetime import datetime
@@ -85,6 +85,15 @@ def add_cors_header(resp):
 
     return resp
 
+def _error_response(message, status):
+    resp = Response(
+        response=json.dumps({'error': message}),
+        status=status,
+        mimetype="application/json"
+    )
+
+    return add_cors_header(resp)
+
 @app.route('/')
 @response_wrapper
 def index():
@@ -108,7 +117,12 @@ def by_location():
 
         return add_cors_header(resp)
 
-    data = mta.get_by_point(location, 5)
+    try:
+        train_filter = _parse_train_filter(request.args)
+    except ValueError as e:
+        return _error_response(str(e), 400)
+
+    data = mta.get_by_point(location, 5, train_filter)
     return _make_envelope(data)
 
 @app.route('/by-route/<route>', methods=['GET'])
@@ -116,10 +130,18 @@ def by_location():
 def by_route(route):
 
     if route.islower():
-        return redirect(request.host_url + 'by-route/' + route.upper(), code=301)
+        url = request.host_url + 'by-route/' + route.upper()
+        if request.query_string:
+            url += '?' + request.query_string.decode()
+        return redirect(url, code=301)
 
     try:
-        data = mta.get_by_route(route)
+        train_filter = _parse_train_filter(request.args)
+    except ValueError as e:
+        return _error_response(str(e), 400)
+
+    try:
+        data = mta.get_by_route(route, train_filter)
         return _make_envelope(data)
     except KeyError as e:
         resp = Response(
@@ -134,8 +156,14 @@ def by_route(route):
 @response_wrapper
 def by_index(id_string):
     ids = id_string.split(',')
+
     try:
-        data = mta.get_by_id(ids)
+        train_filter = _parse_train_filter(request.args)
+    except ValueError as e:
+        return _error_response(str(e), 400)
+
+    try:
+        data = mta.get_by_id(ids, train_filter)
         return _make_envelope(data)
     except KeyError as e:
         resp = Response(
@@ -161,6 +189,21 @@ def routes():
         'data': sorted(mta.get_routes()),
         'updated': mta.last_update()
         }
+
+def _parse_train_filter(args):
+    route_ids = {r.strip().upper() for r in args.get('routes', '').split(',') if r.strip()} or None
+
+    direction = args.get('dir', '').strip().upper() or None
+    if direction is not None and direction not in ('N', 'S'):
+        raise ValueError('Invalid dir parameter')
+
+    max_trains = args.get('max_trains', '').strip() or None
+    if max_trains is not None:
+        max_trains = int(max_trains) if max_trains.isdecimal() else 0
+        if max_trains < 1:
+            raise ValueError('Invalid max_trains parameter')
+
+    return TrainFilter(route_ids=route_ids, direction=direction, max_trains=max_trains)
 
 def _envelope_reduce(a, b):
     if a['last_update'] and b['last_update']:
