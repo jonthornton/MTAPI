@@ -1,4 +1,5 @@
-import urllib, contextlib, datetime, copy
+import urllib.request, urllib.error
+import contextlib, datetime, copy
 from collections import defaultdict
 from itertools import islice
 from operator import itemgetter
@@ -8,10 +9,13 @@ import logging
 import google.protobuf.message
 from mtaproto.feedresponse import FeedResponse, Trip, TripStop, TZ
 from mtapi._mtapithreader import _MtapiThreader
+from typing import TypeAlias
 
 logger = logging.getLogger(__name__)
 
-def distance(p1, p2):
+point: TypeAlias = tuple[float, float] | list[float]
+
+def distance(p1: point, p2: point) -> float:
     return math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
 
 class Mtapi(object):
